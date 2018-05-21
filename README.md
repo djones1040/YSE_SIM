@@ -27,8 +27,11 @@ See [recent pkl file with simulations](https://www.dropbox.com/s/7mzf6xvmlwnbqyr
 
 ### Examples
 
+Check [example notebook](https://github.com/djones1040/YSE_SIM/blob/master/YSE%20Simulation%20Examples.ipynb)
+
 Get histograms of the rise times of young simulated SNe
 ```python FindYoungSN.py --simname yse_ztf --empirical```
 
 Get histograms of the rise times of just young SNe Ia
 ```python FindYoungSN.py --simname yse_ztf --empirical --sntype Ia```
+
