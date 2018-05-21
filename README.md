@@ -5,7 +5,7 @@
 
 To make sure everyone is using the same version of Python,
 there is an `environment.yml` that defines the content of a virtual
-environment called `plasticcval`.
+environment called `YSE`.
 
 To create it first, run (only once)
 ```bash
