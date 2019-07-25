@@ -862,13 +862,15 @@ if __name__ == "__main__":
 		os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
 		
 		# check for job completion
+		print('waiting for job to finish...')
 		job_complete=False
 		while not job_complete:
 			time.sleep(30)
 			simtext = os.popen('squeue --user=djones1741 --format="%.30j"').read()
+
 			job_complete = True
 			for line in simtext.split('\n'):
-				if line.startswith('%s_'%genversion): job_complete = False
+				if '%s_'%genversion in line: job_complete = False
 			
 		serialize.main(genversion,verbose=True)
 		serialize.main('%s_YOUNG'%genversion,verbose=True)		
