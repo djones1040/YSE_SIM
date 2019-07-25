@@ -856,8 +856,7 @@ if __name__ == "__main__":
 	if options.sim:
 		#os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
 		os.system('rm -r SIMLOGS_%s'%genversion)
-		simtext = os.popen('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.')).read()
-		import pdb; pdb.set_trace()
+		os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
 		
 		# check for job completion
 		job_complete=False
