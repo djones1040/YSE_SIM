@@ -1,0 +1,80 @@
+
+GENVERSION: yse_nonia         # simname
+GENSOURCE:  RANDOM   
+GENMODEL:   NON1A
+GENPREEFIX: YSE_IA
+
+SIMLIB_FILE: snanasimlibs/yse_yse.simlib # simlib file
+
+CIDOFF: 500
+KCOR_FILE:  $PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
+APPLY_SEARCHEFF_OPT: 0
+
+EXPOSURE_TIME_FILTER: g 1.0
+EXPOSURE_TIME_FILTER: r 1.0
+EXPOSURE_TIME_FILTER: i 1.0
+EXPOSURE_TIME_FILTER: z 1.0
+
+SEARCHEFF_PIPELINE_FILE:  SEARCHEFF_PIPELINE_YSE.DAT
+SEARCHEFF_PIPELINE_LOGIC_FILE:  SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
+
+GENMAG_SMEAR_MODELNAME: G10
+# selection criteria for generation
+GENFILTERS:       grizXY
+
+GENSIGMA_SEARCH_PEAKMJD:  1.0         # sigma-smearing for  SEARCH_PEAKMJD (days)
+
+GENRANGE_PEAKMJD:  58240  59617
+SOLID_ANGLE: 0.218 # 0.148 # 1 field, 7 sq degreees *7
+# baseline for 4 filters should be 630 degrees (0.192 steradians)
+
+GENRANGE_REDSHIFT:  0.001    0.5
+GENSIGMA_REDSHIFT:  0.000001
+DNDZ: POWERLAW 5E-5   4.5
+DNDZ_PEC1A: POWERLAW  2.6E-5  2.2
+GENRANGE_TREST:   -100.0    80.0     # rest epoch relative to peak (days)
+
+GENMEAN_RV:         3.1               # mean RV to generate
+
+OPT_MWEBV: 1
+
+RANSEED: 128473       # random number seed
+
+# smear flags: 0=off, 1=on
+SMEARFLAG_FLUX:    1  # photo-stat smearing of signal, sky, etc ...
+SMEARFLAG_ZEROPT:  1  # smear zero-point with zptsig
+
+# SEARCHEFF_SPEC_FILE:  SEARCHEFF_SPEC_MF_final.DAT #this is the big one for now.
+APPLY_CUTWIN_OPT:     1
+CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
+CUTWIN_TRESTMIN: -20  10
+CUTWIN_TRESTMAX:   9  40
+CUTWIN_MWEBV:      0 .20
+
+FORMAT_MASK:  2 # terse format
+CUTWIN_SNRMAX:   5.0 grizXY 2 -20. 80.  # require 1 of griz with S/N > 5
+
+GENMEAN_SALT2x1:     0.703
+GENRANGE_SALT2x1:   -5.0  +4.0     # x1 (stretch) range
+GENSIGMA_SALT2x1:    2.15  0.472      # bifurcated sigmas
+#GENSIGMA_SALT2x1:    0.1  0.1      # bifurcated sigmas
+
+GENMEAN_SALT2c:     -0.04
+GENRANGE_SALT2c:   -0.4   0.4     # color range
+GENSIGMA_SALT2c:    0.033   0.125     # bifurcated sigmas
+
+# SALT2 alpha and beta
+
+GENMEAN_SALT2ALPHA:   0.14
+GENMEAN_SALT2BETA:   3.1
+
+# cosmological params for lightcurve generation and redshift distribution
+OMEGA_MATTER:  0.3
+OMEGA_LAMBDA:  0.7
+W0_LAMBDA:    -1.00
+H0:           70.0   
+
+SIMGEN_DUMP:  10  CID  Z  PEAKMJD S2c S2x1 SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
+
+INPUT_FILE_INCLUDE: LFs/SIMGEN_INCLUDE_NON1A_J17-beforeAdjust.INPUT
+

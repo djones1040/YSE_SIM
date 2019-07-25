@@ -2,6 +2,10 @@
 from __future__ import print_function
 
 # gr, gi, gz every 3 days
+# ZTF the day after
+# python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --dosim -i snanainputs/yse_gr_gi_gz.input --ztfoffset 0.875 --onedayfrac 1.0
+
+# gr, gi, gz every 3 days
 # python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --dosim -i snanainputs/yse_gr_gi_gz.input
 # griz + ZTF
 # python genSim.py --dosim -i snanainputs/yse_ztf.input
@@ -26,7 +30,7 @@ palomardict = {'01':0.452,'02':0.607,'03':0.452,'04':0.300,'05':0.161,'06':0.067
 			   '07':0.097,'08':0.161,'09':0.167,'10':0.226,'11':0.300,'12':0.387}
 
 def mkGoodWeatherList(simlibfile = 'PS1MD.simlib',
-					  obslistfile='yse_goodweather.list'):
+					  obslistfile='weather/yse_goodweather.list'):
 
 	fin = open(simlibfile,'r')
 	mjdlist = []
@@ -76,6 +80,12 @@ class mkSimlibs:
 			'--zoffset', default=0,type="float",
 			help='cadence offset in z (default=%default)')
 		parser.add_option(
+			'--ztfoffset', default=-0.125,type="float",
+			help='cadence offset for ZTF (default=%default)')
+		parser.add_option(
+			'--onedayfrac', default=0.1,type="float",
+			help='fraction of survey with a one-day cadence, w/ offsets also divided by 3 for this subset (default=%default)')
+		parser.add_option(
 			'--simlibfile', default='snanasimlibs/yse.simlib',type="string",
 			help='name of simlib file (default=%default)')
 		parser.add_option(
@@ -98,13 +108,14 @@ class mkSimlibs:
 
 	def mksimlib(self,gcadence,rcadence,icadence,zcadence,
 				 goffset,roffset,ioffset,zoffset,
-				 simlibfile,simperfect=False,ztfsim=True):
+				 simlibfile,simperfect=False,ztfsim=True,
+				 ztf_offset=None,onedayfrac=0):
 		# 3 day cadence, gr gi gz
 		glines,rlines,ilines,zlines = getlines()
-		mjd_goodweather = np.loadtxt('yse_goodweather.list',unpack=True)
+		mjd_goodweather = np.loadtxt('weather/yse_goodweather.list',unpack=True)
 
 		# ZTF is 3 hours earlier
-		ztf_offset = -0.125
+		#ztf_offset = -0.125
 
 		if not ztfsim:
 			print('Warning : not simulating ZTF!!')
@@ -116,23 +127,26 @@ class mkSimlibs:
 		if not simperfect:
 			mjd = np.arange(58240,59517,1)
 		else:
-			mjd = np.arange(58240,59040,1)
+			mjd = np.arange(58240,59335,1)
+
+		# nominal survey
 		count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
 		simliblines = []
-		for m in mjd:
+		for m in mjd[0:int(len(mjd)*(1-onedayfrac))]:
 			nightcount += 1
-			
-			randval = random.uniform(0, 1)
-			if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
-				if not nightcount % 3 or simperfect:
-					iLine = random.sample(range(len(glines)),1)[0]
-					for lines in [rlines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
-						simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
-						count += 2
+
+			if ztf_offset < 0:
+				randval = random.uniform(0, 1)
+				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
+					if not nightcount % 3 or simperfect:
+						iLine = random.sample(range(len(glines)),1)[0]
+						for lines in [rlines]:
+							line = lines[iLine][0]
+							linemjd = line.split()[1]
+							lineid = line.split()[2]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
+							count += 2
 
 			# replace random weather with PS1 MD observations
 			# includes not much data at bright time
@@ -176,6 +190,93 @@ class mkSimlibs:
 				   nightcount % icadence or not nightcount % zcadence:
 					usednightcount += 1
 
+			if ztf_offset > 0:
+				randval = random.uniform(0, 1)
+				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
+					if not nightcount % 3 or simperfect:
+						iLine = random.sample(range(len(glines)),1)[0]
+						for lines in [rlines]:
+							line = lines[iLine][0]
+							linemjd = line.split()[1]
+							lineid = line.split()[2]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
+							count += 2
+
+					
+		# one-day survey
+		for m in mjd[int(len(mjd)*(1-onedayfrac)):]:
+			nightcount += 1
+
+			if ztf_offset < 0:
+				randval = random.uniform(0, 1)
+				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
+					if not nightcount % 3 or simperfect:
+						iLine = random.sample(range(len(glines)),1)[0]
+						for lines in [rlines]:
+							line = lines[iLine][0]
+							linemjd = line.split()[1]
+							lineid = line.split()[2]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
+							count += 2
+							
+			# replace random weather with PS1 MD observations
+			# includes not much data at bright time
+			randval = random.uniform(0, 1)
+			if randval > haleakaladict[mjd_to_month(m)] or simperfect:
+				iLine = random.sample(range(len(glines)),1)[0]
+				if (not (nightcount - goffset/3)%1 and nightcount - goffset/3 >= 0) or simperfect:
+					for lines in [glines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = line.split()[2]
+						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						count += 1
+						ps1count += 1
+				if (not (nightcount - roffset/3)%1 and nightcount - roffset/3 >= 0) or simperfect:
+					for lines in [rlines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = line.split()[2]
+						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						count += 1
+						ps1count += 1
+				if (not (nightcount - ioffset/3)%1 and nightcount - ioffset/3 >= 0) or simperfect:
+					for lines in [ilines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = line.split()[2]
+						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						count += 1
+						ps1count += 1
+				if (not (nightcount - zoffset/3)%1 and nightcount - zoffset/3 >= 0) or simperfect:
+					for lines in [zlines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = line.split()[2]
+						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						count += 1
+						ps1count += 1
+						
+				if not nightcount % gcadence or not nightcount % rcadence or not \
+				   nightcount % icadence or not nightcount % zcadence:
+					usednightcount += 1
+
+			if ztf_offset > 0:
+				randval = random.uniform(0, 1)
+				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
+					if not nightcount % 3 or simperfect:
+						iLine = random.sample(range(len(glines)),1)[0]
+						for lines in [rlines]:
+							line = lines[iLine][0]
+							linemjd = line.split()[1]
+							lineid = line.split()[2]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
+							count += 2
+
+				
 		fout = open(simlibfile,'w')
 		print(simlibheader%count,file=fout)
 		for l in simliblines:
@@ -222,9 +323,16 @@ class mkSimlibs:
 			ratestr = ''
 		
 		fout = open(inputfile.replace('.','_MASTER.'),'w')
+		genversion = inputfile.split('/')[-1].split('.')[0]
+		plasticc = plasticcmodelstr%(
+			genversion,genversion,genversion,genversion,
+			genversion,genversion,genversion,genversion,
+			genversion,genversion,genversion,genversion,
+			genversion)
+		
 		print(mastertmpl%(
 			inputfile.split('/')[-1].split('.')[0],inputfile.split('/')[-1].split('.')[0],
-			cutwinstr,ratestr,inputfile.replace('.','_ia.'),inputfile.replace('.','_nonia.'),zmax,
+			cutwinstr,ratestr,plasticc,inputfile.replace('.','_ia.'),inputfile.replace('.','_nonia.'),zmax,
 			inputfile.split('/')[-1].split('.')[0]),file=fout)
 		fout.close()	
 		
@@ -583,6 +691,8 @@ GENOPT(NON1A): INPUT_FILE_INCLUDE LFs/SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
 %s
 %s
 
+%s # PLASTICC Models
+
 ENDLIST_GENVERSION:
 
 NGEN_UNIT:  0.05  SEASONS
@@ -620,6 +730,95 @@ RANSEED: 12349
 
 """
 
+plasticcmodelstr = """
+# 91BG from S. Gonzalez-Gaitan and Felipe Lagos
+#  (more templates than J17, and stretch-color correlation)
+GENVERSION: %s_PLASTICC_MODEL67_SNIa-91bg
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_SNIa-91bg.INPUT
+GENOPT: GENTYPE 67
+GENOPT: SEARCHEFF_SPEC_SCALE 1.0
+
+
+# SNIax from Saurabh
+GENVERSION: %s_PLASTICC_MODEL52_SNIax
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_SNIax.INPUT
+GENOPT: GENTYPE 52
+GENOPT: SEARCHEFF_SPEC_SCALE 1.0
+
+# Superluminous SN:  SLSN-I
+GENVERSION:  %s_PLASTICC_MODEL95_SLSN-I
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_SLSN-I-MOSFIT.INPUT
+GENOPT: GENTYPE 95
+GENOPT: SEARCHEFF_SPEC_SCALE 1.0
+
+# pair instability SN: PISN
+GENVERSION:  %s_PLASTICC_MODEL99_PISN
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_PISN-MOSFIT.INPUT
+GENOPT: GENTYPE 99
+GENOPT: SEARCHEFF_SPEC_FILE ZERO
+
+# Intermediate Luminosity Optical Transients (ILOT)
+GENVERSION:  %s_PLASTICC_MODEL99_ILOT
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_ILOT-MOSFIT.INPUT
+GENOPT: GENTYPE 99
+GENOPT: SEARCHEFF_SPEC_FILE ZERO
+
+# Ca Rich Transients (CART)
+GENVERSION:  %s_PLASTICC_MODEL99_CART
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_CART-MOSFIT.INPUT
+GENOPT: GENTYPE 99
+GENOPT: SEARCHEFF_SPEC_FILE ZERO
+
+# TDE
+#GENVERSION:  %s_PLASTICC_MODEL15_TDE
+#GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_TDE-MOSFIT.INPUT
+#GENOPT: GENTYPE 15
+##GENOPT: SEARCHEFF_SPEC_FILE ZERO
+#GENOPT: SEARCHEFF_SPEC_SCALE 1.00
+
+# MOSFIT-IIn
+GENVERSION:  %s_PLASTICC_MODEL42_SNIIn
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_SNIIn-MOSFIT.INPUT
+GENOPT: GENTYPE 42  SIMLIB_NREPEAT 2
+GENOPT: SEARCHEFF_SPEC_SCALE 1.0
+
+# MOSFIT-Ibc
+GENVERSION:  %s_PLASTICC_MODEL62_SNIbc-MOSFIT
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_SNIbc-MOSFIT.INPUT
+GENOPT: GENTYPE 62   SIMLIB_NREPEAT 4
+GENOPT: SEARCHEFF_SPEC_SCALE 1.0
+
+# Core collapse Type II using pca (5->12 on May 9 2018)
+# for end-of-challenge model release
+GENVERSION: %s_PLASTICC_MODEL42_SNII-NMF
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_SNII-NMF.INPUT
+GENOPT: GENTYPE 42  SIMLIB_NREPEAT 4
+GENOPT: SEARCHEFF_SPEC_SCALE 1.0
+
+# - - - - - - - - - - - - - - - - - - - - - - - - -
+# legacy NON1ASED
+# Core collapse Type II from K10 templates
+GENVERSION: %s_PLASTICC_MODEL42_SNII-Templates
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_SNII-Templates.INPUT
+GENOPT: GENTYPE 42   SIMLIB_NREPEAT 4
+GENOPT: SEARCHEFF_SPEC_SCALE 1.0
+
+# NON1ASED-Ibc
+# Core collapse Type Ibc from K10 templates
+GENVERSION: %s_PLASTICC_MODEL62_SNIbc-Templates
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_SNIbc-Templates.INPUT
+GENOPT: GENTYPE 62   SIMLIB_NREPEAT 4
+GENOPT: SEARCHEFF_SPEC_SCALE 1.0
+
+# - - - - - - - -
+# Type Ia SN
+GENVERSION: %s_PLASTICC_MODEL90_SNIa-SALT2
+GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_SNIa-SALT2.INPUT
+GENOPT: GENTYPE 90
+GENOPT: SEARCHEFF_SPEC_SCALE 0.5
+
+"""
+
 if __name__ == "__main__":
 
 	import os
@@ -636,7 +835,9 @@ if __name__ == "__main__":
 								  options.zcadence,options.goffset,options.roffset,
 								  options.ioffset,options.zoffset,
 								  options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
-								  simperfect=options.perfect)
+								  simperfect=options.perfect,
+								  ztf_offset=options.ztfoffset,
+								  onedayfrac=options.onedayfrac)
 		mks.mkinput(options.gcadence,options.rcadence,options.icadence,options.zcadence,
 					options.inputfile,options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
 					surveyarea,simperfect=options.perfect)
