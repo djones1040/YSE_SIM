@@ -425,7 +425,6 @@ SEARCHEFF_PIPELINE_LOGIC_FILE:  SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
 
 GENRANGE_REDSHIFT:  0.001    0.5
 GENSIGMA_REDSHIFT:  0.000001
-DNDZ: POWERLAW  2.6E-5  2.2
 GENRANGE_TREST:   -100.0    80.0     # rest epoch relative to peak (days)
 
 GENMEAN_RV:         3.1               # mean RV to generate
@@ -581,9 +580,6 @@ SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
 
 GENRANGE_REDSHIFT:  0.001    0.5
 GENSIGMA_REDSHIFT:  0.000001
-DNDZ: POWERLAW2 5E-5   4.5   0.0   0.8    # rate = R0(1+z)^Beta for z<0.8
-DNDZ: POWERLAW2 5.44E-4  0.0   0.8   9.1  # rate = constant for z>0.8
-DNDZ_PEC1A: POWERLAW  2.6E-5  2.2
 GENRANGE_TREST:   -100.0    80.0     # rest epoch relative to peak (days)
 
 GENMEAN_RV:         3.1               # mean RV to generate
@@ -693,8 +689,6 @@ GENVERSION: %s
 GENOPT(1A): DNDZ POWERLAW  2.6E-5  2.2
 GENOPT(NON1A): DNDZ POWERLAW 5E-5   4.5
 GENOPT(NON1A): DNDZ_PEC1A POWERLAW  2.6E-5  2.2
-# GENOPT(NON1A): DNDZ_PEC1A POWERLAW 3.9E-6 2.15
-# GENOPT(NON1A): DNDZ_PEC1A POWERLAW 5.5E-6 2.15
 GENOPT(NON1A): PATH_NON1ASED /project/rkessler/djones/YSE/LFs/NON1A
 # new rates, allowing SN Iax to be 31%%
 
