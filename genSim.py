@@ -30,6 +30,9 @@ from __future__ import print_function
 import numpy as np
 import random
 from astropy.time import Time
+import time
+from sim_serializer import serialize
+from sim_serializer.validutils.io import save_compressed
 
 haleakaladict = {'01':0.323,'02':0.357,'03':0.355,'04':0.333,'05':0.355,'06':0.267,
 				 '07':0.226,'08':0.226,'09':0.367,'10':0.323,'11':0.333,'12':0.258}
@@ -867,8 +870,6 @@ if __name__ == "__main__":
 			for line in simtext.split('\n'):
 				if line.startswith('%s_'%genversion): job_complete = False
 			
-		from sim_serializer import serialize
-		from sim_serializer.validutils.io import save_compressed
 		serialize.main(genversion,verbose=True)
 		serialize.main('%s_YOUNG'%genversion,verbose=True)		
 		fulldatadict = {}
