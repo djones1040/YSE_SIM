@@ -693,7 +693,7 @@ BATCH_INFO:  sbatch  %s 20
 
 GENVERSION: %s
 # GENOPT(NON1A): DNDZ_PEC1A POWERLAW 3.9E-6 2.15
-GENOPT(NON1A): DNDZ_PEC1A POWERLAW 5.5E-6 2.15
+# GENOPT(NON1A): DNDZ_PEC1A POWERLAW 5.5E-6 2.15
 GENOPT(NON1A): PATH_NON1ASED /project/rkessler/djones/YSE/LFs/NON1A
 # new rates, allowing SN Iax to be 31%%
 
@@ -765,10 +765,10 @@ GENOPT: GENTYPE 95
 GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 
 # pair instability SN: PISN
-GENVERSION:  %s_PLASTICC_MODEL99_PISN
-GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_PISN-MOSFIT.INPUT
-GENOPT: GENTYPE 99
-GENOPT: SEARCHEFF_SPEC_FILE ZERO
+#GENVERSION:  %s_PLASTICC_MODEL99_PISN
+#GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_PISN-MOSFIT.INPUT
+#GENOPT: GENTYPE 99
+#GENOPT: SEARCHEFF_SPEC_FILE ZERO
 
 # Intermediate Luminosity Optical Transients (ILOT)
 GENVERSION:  %s_PLASTICC_MODEL99_ILOT
@@ -865,6 +865,10 @@ if __name__ == "__main__":
 		job_complete=False
 		while not job_complete:
 			time.sleep(30)
+			simtext = os.popen('squeue --user=djones1741 --format="%.30j"').read()
+			job_complete = True
+			for line in simtext.split('\n'):
+				if line.startswith('%s_'%genversion): job_complete = False
 			
 		from sim_serializer import serialize
 		from sim_serializer.validutils.io import save_compressed
