@@ -1,0 +1,152 @@
+# The filter-dependent maps below define Efficiency vs. SNR
+# for single-epoch detections from the difference-imaging
+# pipeline (DIFFIMG). These maps were created based on fakes
+# overlaid on images, and is explained in
+#    http://adsabs.harvard.edu/abs/2015AJ....150..172K
+# (see Sec 4.2 and Fig 8)
+#
+# These maps are used by the simulation to determine if each epoch
+# results in a detection. The combined list of detections is used
+# to form a trigger based on logic in SEARCHEFF_PIPELINE_LOGIC.DAT.
+#
+# Maps created from Y1reproc2 at NERSC; Mar 8, 2015
+# Updates include 
+#   1) PSFex fix, 2) DES catalog for scamp, 3) better autoScan
+
+PHOTFLAG_DETECT: 4096  # set this PHOTFLAG bit for each detection
+
+FILTER: g
+SNR:   0.00  0.0000
+SNR:   0.50  0.0000
+SNR:   1.00  0.0000
+SNR:   1.50  0.0000
+SNR:   2.00  0.0000
+SNR:   2.50  0.0000
+SNR:   3.00  0.0000
+SNR:   3.50  0.0000
+SNR:   4.00  0.0000
+SNR:   4.50  0.0000
+SNR:   5.00  1.0000
+SNR:   5.50  1.0000
+SNR:   6.00  1.0000
+SNR:   6.50  1.0000
+SNR:   7.00  1.0000
+SNR:   7.50  1.0000
+SNR:   8.00  1.0000
+SNR:   8.50  1.0000
+SNR:   9.00  1.0000
+SNR:   9.50  1.0000
+SNR:  10.00  1.0000
+SNR:  10.50  1.0000
+SNR:  11.00  1.0000
+SNR:  11.50  1.0000
+SNR:  12.00  1.0000
+SNR:  12.50  1.0000
+SNR:  13.00  1.0000
+SNR:  13.50  1.0000
+SNR:  14.00  1.0000
+SNR:  14.50  1.0000
+SNR:  15.00  1.0000
+SNR:  50.00  1.0000
+
+FILTER: r
+SNR:   0.00  0.0000
+SNR:   0.50  0.0000
+SNR:   1.00  0.0000
+SNR:   1.50  0.0000
+SNR:   2.00  0.0000
+SNR:   2.50  0.0000
+SNR:   3.00  0.0000
+SNR:   3.50  0.0000
+SNR:   4.00  0.0000
+SNR:   4.50  0.0000
+SNR:   5.00  1.0000
+SNR:   5.50  1.0000
+SNR:   6.00  1.0000
+SNR:   6.50  1.0000
+SNR:   7.00  1.0000
+SNR:   7.50  1.0000
+SNR:   8.00  1.0000
+SNR:   8.50  1.0000
+SNR:   9.00  1.0000
+SNR:   9.50  1.0000
+SNR:  10.00  1.0000
+SNR:  10.50  1.0000
+SNR:  11.00  1.0000
+SNR:  11.50  1.0000
+SNR:  12.00  1.0000
+SNR:  12.50  1.0000
+SNR:  13.00  1.0000
+SNR:  13.50  1.0000
+SNR:  14.00  1.0000
+SNR:  14.50  1.0000
+SNR:  15.00  1.0000
+SNR:  50.00  1.0000
+
+FILTER: i
+SNR:   0.00  0.0000
+SNR:   0.50  0.0000
+SNR:   1.00  0.0000
+SNR:   1.50  0.0000
+SNR:   2.00  0.0000
+SNR:   2.50  0.0000
+SNR:   3.00  0.0000
+SNR:   3.50  0.0000
+SNR:   4.00  0.0000
+SNR:   4.50  0.0000
+SNR:   5.00  1.0000
+SNR:   5.50  1.0000
+SNR:   6.00  1.0000
+SNR:   6.50  1.0000
+SNR:   7.00  1.0000
+SNR:   7.50  1.0000
+SNR:   8.00  1.0000
+SNR:   8.50  1.0000
+SNR:   9.00  1.0000
+SNR:   9.50  1.0000
+SNR:  10.00  1.0000
+SNR:  10.50  1.0000
+SNR:  11.00  1.0000
+SNR:  11.50  1.0000
+SNR:  12.00  1.0000
+SNR:  12.50  1.0000
+SNR:  13.00  1.0000
+SNR:  13.50  1.0000
+SNR:  14.00  1.0000
+SNR:  14.50  1.0000
+SNR:  15.00  1.0000
+SNR:  50.00  1.0000
+
+FILTER: z
+SNR:   0.00  0.0000
+SNR:   0.50  0.0000
+SNR:   1.00  0.0000
+SNR:   1.50  0.0000
+SNR:   2.00  0.0000
+SNR:   2.50  0.0000
+SNR:   3.00  0.0000
+SNR:   3.50  0.0000
+SNR:   4.00  0.0000
+SNR:   4.50  0.0000
+SNR:   5.00  1.0000
+SNR:   5.50  1.0000
+SNR:   6.00  1.0000
+SNR:   6.50  1.0000
+SNR:   7.00  1.0000
+SNR:   7.50  1.0000
+SNR:   8.00  1.0000
+SNR:   8.50  1.0000
+SNR:   9.00  1.0000
+SNR:   9.50  1.0000
+SNR:  10.00  1.0000
+SNR:  10.50  1.0000
+SNR:  11.00  1.0000
+SNR:  11.50  1.0000
+SNR:  12.00  1.0000
+SNR:  12.50  1.0000
+SNR:  13.00  1.0000
+SNR:  13.50  1.0000
+SNR:  14.00  1.0000
+SNR:  14.50  1.0000
+SNR:  15.00  1.0000
+SNR:  50.00  1.0000
