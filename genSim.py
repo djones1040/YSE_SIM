@@ -98,6 +98,8 @@ class mkSimlibs:
 		parser.add_option(
 			'-i','--inputfile', default='snanainputs/yse.input',type="string",
 			help='name of simlib file (default=%default)')
+		parser.add_option('--batchtmpl',default='/home/djones1741/djones/SBATCH_sandyb.TEMPLATE',
+						  type="string",help='cluster batch template')
 		parser.add_option(
 			'-s','--sim', default=False,action="store_true",
 			help='run SNANA simulation, if set (default=%default)')
@@ -295,7 +297,7 @@ class mkSimlibs:
 		return surveyarea
 	
 		
-	def mkinput(self,gcadence,rcadence,icadence,zcadence,inputfile,simlibfile,surveyarea,simperfect=False):
+	def mkinput(self,gcadence,rcadence,icadence,zcadence,inputfile,simlibfile,surveyarea,simperfect=False,batchtmpl=None):
 
 		filtstr = ''
 		for filt,cadence in zip('grizXY',[gcadence,rcadence,icadence,zcadence,3,3]):
@@ -338,6 +340,7 @@ class mkSimlibs:
 			genversion)
 		
 		print(mastertmpl%(
+			batchtmpl,
 			inputfile.split('/')[-1].split('.')[0],inputfile.split('/')[-1].split('.')[0],
 			cutwinstr,ratestr,plasticc,inputfile.replace('.','_ia.'),inputfile.replace('.','_nonia.'),zmax,
 			inputfile.split('/')[-1].split('.')[0]),file=fout)
@@ -684,7 +687,7 @@ END_OF_SIMLIB:
 """
 
 mastertmpl = """
-BATCH_INFO:  sbatch  /home/djones1741/djones/SBATCH_sandyb.TEMPLATE 20
+BATCH_INFO:  sbatch  %s 20
 
 # nominal generation
 
@@ -850,7 +853,7 @@ if __name__ == "__main__":
 								  onedayfrac=options.onedayfrac)
 		genversion = mks.mkinput(options.gcadence,options.rcadence,options.icadence,options.zcadence,
 								 options.inputfile,options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
-								 surveyarea,simperfect=options.perfect)
+								 surveyarea,simperfect=options.perfect,batchtmpl=options.batchtmpl)
 	
 	if options.sim:
 		#os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
