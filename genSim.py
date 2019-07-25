@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
+# current sim list, diff 1-day fracs
+# python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --dosim -i snanainputs/yse_gr_gi_gz_10per.input --ztfoffset 0.875 --onedayfrac 0.1
+# python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --dosim -i snanainputs/yse_gr_gi_gz_20per.input --ztfoffset 0.875 --onedayfrac 0.2
+# python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --dosim -i snanainputs/yse_gr_gi_gz_30per.input --ztfoffset 0.875 --onedayfrac 0.3
+
+
+
 # gr, gi, gz every 3 days
 # ZTF the day after
 # python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --dosim -i snanainputs/yse_gr_gi_gz.input --ztfoffset 0.875 --onedayfrac 1.0
@@ -92,14 +99,14 @@ class mkSimlibs:
 			'-i','--inputfile', default='snanainputs/yse.input',type="string",
 			help='name of simlib file (default=%default)')
 		parser.add_option(
-			'-s','--dosim', default=False,action="store_true",
+			'-s','--sim', default=False,action="store_true",
 			help='run SNANA simulation, if set (default=%default)')
 		parser.add_option(
-			'--onlysim', default=False,action="store_true",
-			help='only run SNANA simulation, if set (default=%default)')
+			'--fit', default=False,action="store_true",
+			help='run SNANA fitting, if set (default=%default)')
 		parser.add_option(
-			'--onlyfit', default=False,action="store_true",
-			help='only run SNANA fitting, if set (default=%default)')
+			'--analyze', default=False,action="store_true",
+			help='run basic analysis tools, if set (default=%default)')
 		parser.add_option(
 			'--perfect', default=False,action="store_true",
 			help='generate perfect high cadence simulations, if set (default=%default)')
@@ -335,6 +342,8 @@ class mkSimlibs:
 			cutwinstr,ratestr,plasticc,inputfile.replace('.','_ia.'),inputfile.replace('.','_nonia.'),zmax,
 			inputfile.split('/')[-1].split('.')[0]),file=fout)
 		fout.close()	
+
+		return genversion
 		
 def getlines(simlibfile = 'snanasimlibs/found_yse.simlib'):
 
@@ -830,7 +839,7 @@ if __name__ == "__main__":
 	parser = mks.add_options(usage=usagestring)
 	options,  args = parser.parse_args()
 
-	if not options.onlysim or not options.onlyfit:
+	if not options.sim or not options.fit:
 		surveyarea = mks.mksimlib(options.gcadence,options.rcadence,options.icadence,
 								  options.zcadence,options.goffset,options.roffset,
 								  options.ioffset,options.zoffset,
@@ -838,16 +847,38 @@ if __name__ == "__main__":
 								  simperfect=options.perfect,
 								  ztf_offset=options.ztfoffset,
 								  onedayfrac=options.onedayfrac)
-		mks.mkinput(options.gcadence,options.rcadence,options.icadence,options.zcadence,
-					options.inputfile,options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
-					surveyarea,simperfect=options.perfect)
+		genversion = mks.mkinput(options.gcadence,options.rcadence,options.icadence,options.zcadence,
+								 options.inputfile,options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
+								 surveyarea,simperfect=options.perfect)
 	
-	if options.dosim:
-#		os.system('snlc_sim.exe %s'%options.inputfile.replace('.','_ia.'))
-#		os.system('snlc_sim.exe %s'%options.inputfile.replace('.','_nonia.'))
-#		os.system('snlc_sim.exe %s'%options.inputfile.replace('.','_young.'))
-		os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
-
-	if options.onlyfit:
-		os.system('split_and_fit.pl YSE.nml')
+	if options.sim:
+		#os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
+		simtext = os.popen('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.')).read()
+		import pdb; pdb.set_trace()
 		
+		# check for job completion
+		job_complete=False
+		while not job_complete:
+			time.sleep(30)
+			
+		from sim_serializer import serialize
+		from sim_serializer.validutils.io import save_compressed
+		serialize.main(genversion,verbose=True)
+		serialize.main('%s_YOUNG'%genversion,verbose=True)		
+		fulldatadict = {}
+		for versionsuffix in ['PLASTICC_MODEL67_SNIa-91bg','PLASTICC_MODEL52_SNIax','PLASTICC_MODEL95_SLSN-I',
+							  'PLASTICC_MODEL99_ILOT','PLASTICC_MODEL99_CART','PLASTICC_MODEL42_SNIIn',
+							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL62_SNIbc-Templates',
+							  'PLASTICC_MODEL42_SNII-NMF','PLASTICC_MODEL42_SNII-Templates',
+							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL90_SNIa-SALT2']:
+			datadict = serialize.main('%s_%s'%(genversion,plasticcsuffix),verbose=True)
+			for k in datadict.keys():
+				fulldatadict[k] = datadict[k]
+		save_compressed(table, '%s_PLASTICC.pkl.gz')
+		
+	if options.fit:
+		fittext = os.popen('split_and_fit.pl YSE.nml').read()
+		
+	if options.analyze:
+		pass
+
