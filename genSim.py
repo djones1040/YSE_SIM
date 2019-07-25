@@ -2,9 +2,9 @@
 from __future__ import print_function
 
 # current sim list, diff 1-day fracs
-# python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --dosim -i snanainputs/yse_gr_gi_gz_10per.input --ztfoffset 0.875 --onedayfrac 0.1
-# python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --dosim -i snanainputs/yse_gr_gi_gz_20per.input --ztfoffset 0.875 --onedayfrac 0.2
-# python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --dosim -i snanainputs/yse_gr_gi_gz_30per.input --ztfoffset 0.875 --onedayfrac 0.3
+# python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --sim -i snanainputs/yse_gr_gi_gz_10per.input --ztfoffset 0.875 --onedayfrac 0.1
+# python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --sim -i snanainputs/yse_gr_gi_gz_20per.input --ztfoffset 0.875 --onedayfrac 0.2
+# python genSim.py --gcadence 3 --rcadence 9 --icadence 9 --zcadence 9 --roffset 0 --ioffset 3 --zoffset 6 --sim -i snanainputs/yse_gr_gi_gz_30per.input --ztfoffset 0.875 --onedayfrac 0.3
 
 
 
@@ -684,7 +684,7 @@ END_OF_SIMLIB:
 """
 
 mastertmpl = """
-BATCH_INFO:  sbatch  /project/rkessler/djones/SBATCH_sandyb.TEMPLATE 20
+BATCH_INFO:  sbatch  /home/djones1741/djones/SBATCH_sandyb.TEMPLATE 20
 
 # nominal generation
 
@@ -715,6 +715,7 @@ H0: 70
 ZRANGE:      0.002  %.1f
 GENPREFIX:   %s          # prefix of all data filenames
 FORMAT_MASK: 48           # 2=TERSE    16=RanCID  32=FITS-FORMAT
+RESET_CIDOFF: 2
 
 RANSEED: 12349
 RANSEED: 12349
