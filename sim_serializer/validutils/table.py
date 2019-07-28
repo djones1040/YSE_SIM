@@ -119,10 +119,24 @@ def parse_model(dirpath):
 	README_FILE = README_FILE[0]
 	
 	with open(README_FILE) as fin:
+		filters = ''
 		for line in fin:
 			if 'Generation FILTERS:' in line:
 				filters = line.split()[-1]
 				break
+	if not filters:
+		with open(README_FILE) as fin:
+			infile = ''
+			for line in fin:
+				if 'INFILE:' in line:
+					infile = line.split()[-1]
+					break
+		if not infile: raise RuntimeError('can\'t figure out filters!!')
+		with open(infile) as fin:
+			for line in fin:
+				if 'GENFILTERS' in line:
+					filters = line.split()[-1]
+	if not filters: raise RuntimeError('can\'t figure out filters!!')
 
 	# List all header files in the given directory
 	header_files = glob.glob('%s/*HEAD.FITS*'%dirpath)

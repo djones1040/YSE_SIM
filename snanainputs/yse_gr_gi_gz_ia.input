@@ -30,7 +30,6 @@ SEARCHEFF_PIPELINE_LOGIC_FILE:  SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
 
 GENRANGE_REDSHIFT:  0.001    0.5
 GENSIGMA_REDSHIFT:  0.000001
-DNDZ: POWERLAW  2.6E-5  2.2
 GENRANGE_TREST:   -100.0    80.0     # rest epoch relative to peak (days)
 
 GENMEAN_RV:         3.1               # mean RV to generate

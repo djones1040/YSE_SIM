@@ -6,13 +6,15 @@
 import argparse
 from pathlib import Path
 import os
+import time
 
 from .validutils.io import save_compressed
 from .validutils.table import parse_model
 
 def main(simname,outfile_root=None,dirpath='$SNDATA_ROOT/SIM',
-		 verbose=False):
+		 verbose=False,save=True):
 
+	tstart = time.time()
 	if not outfile_root:
 		outfile_root = simname
 	
@@ -21,10 +23,11 @@ def main(simname,outfile_root=None,dirpath='$SNDATA_ROOT/SIM',
 	dirpath = os.path.expandvars('%s/%s'%(dirpath,simname))
 	
 	table = parse_model(dirpath)
-	save_compressed(table, filename)
+	if save: save_compressed(table, filename)
 
 	if verbose:
-		print("SN data from {} saved to {}".format(dirpath.name, filename))
+		print("SN data from {} saved to {}".format(dirpath, filename))
+		print('serializer took %.1f minutes'%((time.time()-tstart)/60.))
 
 	return table
 		
