@@ -139,7 +139,8 @@ class mkSimlibs:
 		if not simperfect:
 			mjd = np.arange(58240,59517,1)
 		else:
-			mjd = np.arange(58240,59315,1)
+			mjd = np.arange(58240,58440,1)
+			#mjd = np.arange(58240,59000,1)
 
 		# nominal survey
 		count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
@@ -296,7 +297,11 @@ class mkSimlibs:
 		print(simlibfooter,file=fout)
 		fout.close()
 
-		surveyarea = 2.*3600./20*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
+		#surveyarea = 2.*3600./20*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
+
+		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
+		surveyarea = 1.6*3600./27*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
+
 		return surveyarea
 	
 		
@@ -469,7 +474,7 @@ OMEGA_LAMBDA:  0.7
 W0_LAMBDA:    -1.00
 H0:           70.0   
 
-SIMGEN_DUMP:  10  CID  Z  PEAKMJD S2c S2x1 SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
+SIMGEN_DUMP:  8  CID  Z  PEAKMJD SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
 """
 
 noniainputheader = """
@@ -546,7 +551,7 @@ OMEGA_LAMBDA:  0.7
 W0_LAMBDA:    -1.00
 H0:           70.0   
 
-SIMGEN_DUMP:  10  CID  Z  PEAKMJD S2c S2x1 SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
+SIMGEN_DUMP:  8  CID  Z  PEAKMJD SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
 
 INPUT_FILE_INCLUDE: LFs/SIMGEN_INCLUDE_NON1A_J17-beforeAdjust.INPUT
 """
@@ -625,7 +630,7 @@ OMEGA_LAMBDA:  0.7
 W0_LAMBDA:    -1.00
 H0:           70.0   
 
-SIMGEN_DUMP:  10  CID  Z  PEAKMJD S2c S2x1 SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
+SIMGEN_DUMP:  8  CID  Z  PEAKMJD SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
 
 PATH_NON1ASED: /project/rkessler/SURVEYS/YSE/USERS/djones/YSE_SIM/LFs/NON1A
 INPUT_FILE_INCLUDE: SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
@@ -708,7 +713,7 @@ GENOPT(NON1A): INPUT_FILE_INCLUDE LFs/SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
 
 ENDLIST_GENVERSION:
 
-NGEN_UNIT:  0.005  SEASONS
+NGEN_UNIT:  0.286  SEASONS
 
 # specify sim-input files for snlc_sim.exe
 SIMGEN_INFILE_Ia: %s
@@ -857,7 +862,6 @@ if __name__ == "__main__":
 								 surveyarea,simperfect=options.perfect,batchtmpl=options.batchtmpl)
 	
 	if options.sim:
-		#os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
 		os.system('rm -r SIMLOGS_%s'%genversion)
 		os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
 		
@@ -865,24 +869,30 @@ if __name__ == "__main__":
 		print('waiting for job to finish...')
 		job_complete=False
 		while not job_complete:
-			time.sleep(30)
+			time.sleep(15)
 			simtext = os.popen('squeue --user=djones1741 --format="%.30j"').read()
 
 			job_complete = True
 			for line in simtext.split('\n'):
 				if '%s_'%genversion in line: job_complete = False
-			
-		serialize.main(genversion,verbose=True)
-		serialize.main('%s_YOUNG'%genversion,verbose=True)		
+		print('starting serialization step')
+		serialize.main(genversion,verbose=True,filters='grizXY')
+		os.system('cp $SNDATA_ROOT/SIM/%s/%s.DUMP dump/'%(genversion,genversion))
+
+		serialize.main('%s_YOUNG'%genversion,verbose=True,filters='grizXY')		
+		os.system('cp $SNDATA_ROOT/SIM/%s_YOUNG/%s_YOUNG.DUMP dump/'%(genversion,genversion))
+
 		fulldatadict = {}
 		for versionsuffix in ['PLASTICC_MODEL67_SNIa-91bg','PLASTICC_MODEL52_SNIax','PLASTICC_MODEL95_SLSN-I',
 							  'PLASTICC_MODEL99_ILOT','PLASTICC_MODEL99_CART','PLASTICC_MODEL42_SNIIn',
 							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL62_SNIbc-Templates',
 							  'PLASTICC_MODEL42_SNII-NMF','PLASTICC_MODEL42_SNII-Templates',
 							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL90_SNIa-SALT2']:
-			datadict = serialize.main('%s_%s'%(genversion,versionsuffix),verbose=True,save=False)
+			datadict = serialize.main('%s_%s'%(genversion,versionsuffix),verbose=True,save=False,filters='grizXY')
 			for k in datadict.keys():
 				fulldatadict[k] = datadict[k]
+		os.system('cp $SNDATA_ROOT/SIM/%s_%s/%s_%s.DUMP dump/'%(genversion,versionsuffix,genversion,versionsuffix))
+
 		save_compressed(fulldatadict, '%s_PLASTICC.pkl.gz'%genversion)
 		
 	if options.fit:
