@@ -732,6 +732,7 @@ ZRANGE:      0.002  %.1f
 GENPREFIX:   %s          # prefix of all data filenames
 FORMAT_MASK: 48           # 2=TERSE    16=RanCID  32=FITS-FORMAT
 RESET_CIDOFF: 2
+PATH_SNDATA_SIM:  $SCRATCH_SIMDIR
 
 RANSEED: 12349
 RANSEED: 12349
