@@ -58,7 +58,7 @@ def to_dataframe(data,simkey1='SIM_TYPE_NAME',simkey2='SIM_MODEL_NAME',simkey3='
 		#	sn['SIM_TYPE'] = sn['header']['SIM_MODEL_NAME']
 		#elif 'NON1ASED' in sn['SIM_TYPE']:
 		#	sn['SIM_TYPE'] = sn['header']['SIM_TYPE_NAME'].split('.')[-1]
-		if sn['SIM_TYPE'] not in ['SNIa-91bg','SNIax','CART','SNIIn','SNIb','SNIc','SNII','SNIa']: import pdb; pdb.set_trace()
+		if sn['SIM_TYPE'] not in ['SNIa-91bg','SNIax','CART','SNIIn','SNIb','SNIc','SNII','SNIa','ILOT']: import pdb; pdb.set_trace()
 		
 		del sn['header']
 	print('warning: could not figure out explosion times for %i of %i transients (%.2f%%)'%(badcount,goodcount,badcount/goodcount*100))
