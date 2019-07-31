@@ -148,77 +148,6 @@ class mkSimlibs:
 		# nominal survey
 		count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
 		simliblines = []
-		for m in mjd[0:int(len(mjd)*(1-onedayfrac/3.))]:
-			nightcount += 1
-
-			if ztf_offset < 0:
-				randval = random.uniform(0, 1)
-				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
-					if not nightcount % 3 or simperfect:
-						iLine = random.sample(range(len(glines)),1)[0]
-						for lines in [rlines]:
-							line = lines[iLine][0]
-							linemjd = line.split()[1]
-							lineid = line.split()[2]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
-							count += 2
-
-			# replace random weather with PS1 MD observations
-			# includes not much data at bright time
-			randval = random.uniform(0, 1)
-			if randval > haleakaladict[mjd_to_month(m)] or simperfect:
-				iLine = random.sample(range(len(glines)),1)[0]
-				if (not (nightcount - goffset) % gcadence and nightcount - goffset >= 0) or simperfect:
-					for lines in [glines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
-						count += 1
-						ps1count += 1
-				if (not (nightcount - roffset) % rcadence and nightcount - roffset >= 0) or simperfect:
-					for lines in [rlines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
-						count += 1
-						ps1count += 1
-				if (not (nightcount - ioffset) % icadence and nightcount - ioffset >= 0) or simperfect:
-					for lines in [ilines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
-						count += 1
-						ps1count += 1
-				if (not (nightcount - zoffset) % zcadence and nightcount - zoffset >= 0) or simperfect:
-					for lines in [zlines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
-						count += 1
-						ps1count += 1
-						
-				if not nightcount % gcadence or not nightcount % rcadence or not \
-				   nightcount % icadence or not nightcount % zcadence:
-					usednightcount += 1
-
-			if ztf_offset > 0:
-				randval = random.uniform(0, 1)
-				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
-					if not nightcount % 3 or simperfect:
-						iLine = random.sample(range(len(glines)),1)[0]
-						for lines in [rlines]:
-							line = lines[iLine][0]
-							linemjd = line.split()[1]
-							lineid = line.split()[2]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
-							count += 2
-
 		# one-day survey
 		for m in mjd[int(len(mjd)*(1-onedayfrac/3.)):]:
 			nightcount += 1
@@ -274,6 +203,77 @@ class mkSimlibs:
 						count += 1
 						ps1count += 1
 
+				if not nightcount % gcadence or not nightcount % rcadence or not \
+				   nightcount % icadence or not nightcount % zcadence:
+					usednightcount += 1
+
+			if ztf_offset > 0:
+				randval = random.uniform(0, 1)
+				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
+					if not nightcount % 3 or simperfect:
+						iLine = random.sample(range(len(glines)),1)[0]
+						for lines in [rlines]:
+							line = lines[iLine][0]
+							linemjd = line.split()[1]
+							lineid = line.split()[2]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
+							count += 2
+
+		for m in mjd[0:int(len(mjd)*(1-onedayfrac/3.))]:
+			nightcount += 1
+
+			if ztf_offset < 0:
+				randval = random.uniform(0, 1)
+				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
+					if not nightcount % 3 or simperfect:
+						iLine = random.sample(range(len(glines)),1)[0]
+						for lines in [rlines]:
+							line = lines[iLine][0]
+							linemjd = line.split()[1]
+							lineid = line.split()[2]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
+							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
+							count += 2
+
+			# replace random weather with PS1 MD observations
+			# includes not much data at bright time
+			randval = random.uniform(0, 1)
+			if randval > haleakaladict[mjd_to_month(m)] or simperfect:
+				iLine = random.sample(range(len(glines)),1)[0]
+				if (not (nightcount - goffset) % gcadence and nightcount - goffset >= 0) or simperfect:
+					for lines in [glines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = line.split()[2]
+						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						count += 1
+						ps1count += 1
+				if (not (nightcount - roffset) % rcadence and nightcount - roffset >= 0) or simperfect:
+					for lines in [rlines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = line.split()[2]
+						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						count += 1
+						ps1count += 1
+				if (not (nightcount - ioffset) % icadence and nightcount - ioffset >= 0) or simperfect:
+					for lines in [ilines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = line.split()[2]
+						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						count += 1
+						ps1count += 1
+				if (not (nightcount - zoffset) % zcadence and nightcount - zoffset >= 0) or simperfect:
+					for lines in [zlines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = line.split()[2]
+						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						count += 1
+						ps1count += 1
+						
 				if not nightcount % gcadence or not nightcount % rcadence or not \
 				   nightcount % icadence or not nightcount % zcadence:
 					usednightcount += 1
