@@ -870,8 +870,8 @@ if __name__ == "__main__":
 								 surveyarea,simperfect=options.perfect,batchtmpl=options.batchtmpl,exptime=options.exptime)
 	
 	if options.sim:
-		os.system('rm -r SIMLOGS_%s'%genversion)
-		os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
+		#os.system('rm -r SIMLOGS_%s'%genversion)
+		#os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
 		
 		# check for job completion
 		print('waiting for job to finish...')
@@ -884,11 +884,11 @@ if __name__ == "__main__":
 			for line in simtext.split('\n'):
 				if '%s_'%genversion in line: job_complete = False
 		print('starting serialization step')
-		serialize.main(genversion,verbose=True,filters='grizXY')
-		os.system('cp $SNDATA_ROOT/SIM/%s/%s.DUMP dump/'%(genversion,genversion))
+		serialize.main(genversion,verbose=True,filters='grizXY',dirpath='$SCRATCH_SIMDIR')
+		os.system('cp $SCRATCH_SIMDIR/%s/%s.DUMP dump/'%(genversion,genversion))
 
-		serialize.main('%s_YOUNG'%genversion,verbose=True,filters='grizXY')		
-		os.system('cp $SNDATA_ROOT/SIM/%s_YOUNG/%s_YOUNG.DUMP dump/'%(genversion,genversion))
+		serialize.main('%s_YOUNG'%genversion,verbose=True,filters='grizXY',dirpath='$SCRATCH_SIMDIR')
+		os.system('cp $SCRATCH_SIMDIR/%s_YOUNG/%s_YOUNG.DUMP dump/'%(genversion,genversion))
 
 		fulldatadict = {}
 		for versionsuffix in ['PLASTICC_MODEL67_SNIa-91bg','PLASTICC_MODEL52_SNIax','PLASTICC_MODEL95_SLSN-I',
@@ -896,11 +896,12 @@ if __name__ == "__main__":
 							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL62_SNIbc-Templates',
 							  'PLASTICC_MODEL42_SNII-NMF','PLASTICC_MODEL42_SNII-Templates',
 							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL90_SNIa-SALT2']:
-			datadict = serialize.main('%s_%s'%(genversion,versionsuffix),verbose=True,save=False,filters='grizXY')
+			datadict = serialize.main('%s_%s'%(genversion,versionsuffix),verbose=True,save=False,
+									  filters='grizXY',dirpath='$SCRATCH_SIMDIR')
 			for k in datadict.keys():
 				fulldatadict[k] = datadict[k]
-			os.system('cp $SNDATA_ROOT/SIM/%s_%s/%s_%s.DUMP dump/'%(genversion,versionsuffix,genversion,versionsuffix))
-			os.system('cat $SNDATA_ROOT/SIM/%s_%s/%s_%s.DUMP >> dump/%s_PLASTICC.dump'%(genversion,versionsuffix,genversion,versionsuffix,genversion))
+			os.system('cp $SCRATCH_SIMDIR/%s_%s/%s_%s.DUMP dump/'%(genversion,versionsuffix,genversion,versionsuffix))
+			os.system('cat $SCRATCH_SIMDIR/SIM/%s_%s/%s_%s.DUMP >> dump/%s_PLASTICC.dump'%(genversion,versionsuffix,genversion,versionsuffix,genversion))
 
 		save_compressed(fulldatadict, '%s_PLASTICC.pkl.gz'%genversion)
 		
