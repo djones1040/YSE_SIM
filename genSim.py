@@ -713,7 +713,8 @@ GENOPT(NON1A): INPUT_FILE_INCLUDE LFs/SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
 
 ENDLIST_GENVERSION:
 
-NGEN_UNIT:  0.286  SEASONS
+NGEN_UNIT:  0.014  SEASONS
+# 0.286 seasons (1 year)/20 jobs
 
 # specify sim-input files for snlc_sim.exe
 SIMGEN_INFILE_Ia: %s
@@ -862,8 +863,8 @@ if __name__ == "__main__":
 								 surveyarea,simperfect=options.perfect,batchtmpl=options.batchtmpl)
 	
 	if options.sim:
-		os.system('rm -r SIMLOGS_%s'%genversion)
-		os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
+		#os.system('rm -r SIMLOGS_%s'%genversion)
+		#os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
 		
 		# check for job completion
 		print('waiting for job to finish...')
@@ -876,10 +877,10 @@ if __name__ == "__main__":
 			for line in simtext.split('\n'):
 				if '%s_'%genversion in line: job_complete = False
 		print('starting serialization step')
-		serialize.main(genversion,verbose=True,filters='grizXY')
+		#serialize.main(genversion,verbose=True,filters='grizXY')
 		os.system('cp $SNDATA_ROOT/SIM/%s/%s.DUMP dump/'%(genversion,genversion))
 
-		serialize.main('%s_YOUNG'%genversion,verbose=True,filters='grizXY')		
+		#serialize.main('%s_YOUNG'%genversion,verbose=True,filters='grizXY')		
 		os.system('cp $SNDATA_ROOT/SIM/%s_YOUNG/%s_YOUNG.DUMP dump/'%(genversion,genversion))
 
 		fulldatadict = {}
@@ -891,7 +892,8 @@ if __name__ == "__main__":
 			datadict = serialize.main('%s_%s'%(genversion,versionsuffix),verbose=True,save=False,filters='grizXY')
 			for k in datadict.keys():
 				fulldatadict[k] = datadict[k]
-		os.system('cp $SNDATA_ROOT/SIM/%s_%s/%s_%s.DUMP dump/'%(genversion,versionsuffix,genversion,versionsuffix))
+			os.system('cp $SNDATA_ROOT/SIM/%s_%s/%s_%s.DUMP dump/'%(genversion,versionsuffix,genversion,versionsuffix))
+			os.system('cat $SNDATA_ROOT/SIM/%s_%s/%s_%s.DUMP >> dump/%s_PLASTICC.dump'%(genversion,versionsuffix,genversion,versionsuffix,genversion))
 
 		save_compressed(fulldatadict, '%s_PLASTICC.pkl.gz'%genversion)
 		
