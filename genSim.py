@@ -149,7 +149,7 @@ class mkSimlibs:
 		count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
 		simliblines = []
 		# one-day survey
-		for m in mjd[int(len(mjd)*(1-onedayfrac/3.)):]:
+		for m in mjd[:int(len(mjd)*(onedayfrac/3.))]:
 			nightcount += 1
 
 			if ztf_offset < 0:
@@ -220,7 +220,7 @@ class mkSimlibs:
 							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
 							count += 2
 
-		for m in mjd[0:int(len(mjd)*(1-onedayfrac/3.))]:
+		for m in mjd[int(len(mjd)*(onedayfrac/3.)):]:
 			nightcount += 1
 
 			if ztf_offset < 0:
