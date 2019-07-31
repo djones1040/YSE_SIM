@@ -93,6 +93,9 @@ class mkSimlibs:
 			'--ztfoffset', default=-0.125,type="float",
 			help='cadence offset for ZTF (default=%default)')
 		parser.add_option(
+			'--exptime', default=15,type="float",
+			help='exposure time in seconds (default=%default)')
+		parser.add_option(
 			'--onedayfrac', default=0.1,type="float",
 			help='fraction of survey with a one-day cadence, w/ offsets also divided by 3 for this subset (default=%default)')
 		parser.add_option(
@@ -121,7 +124,7 @@ class mkSimlibs:
 	def mksimlib(self,gcadence,rcadence,icadence,zcadence,
 				 goffset,roffset,ioffset,zoffset,
 				 simlibfile,simperfect=False,ztfsim=True,
-				 ztf_offset=None,onedayfrac=0):
+				 ztf_offset=None,onedayfrac=0,exptime=15):
 		# 3 day cadence, gr gi gz
 		glines,rlines,ilines,zlines = getlines()
 		mjd_goodweather = np.loadtxt('weather/yse_goodweather.list',unpack=True)
@@ -145,7 +148,7 @@ class mkSimlibs:
 		# nominal survey
 		count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
 		simliblines = []
-		for m in mjd[0:int(len(mjd)*(1-onedayfrac))]:
+		for m in mjd[0:int(len(mjd)*(1-onedayfrac/3.))]:
 			nightcount += 1
 
 			if ztf_offset < 0:
@@ -216,9 +219,8 @@ class mkSimlibs:
 							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
 							count += 2
 
-					
 		# one-day survey
-		for m in mjd[int(len(mjd)*(1-onedayfrac)):]:
+		for m in mjd[int(len(mjd)*(1-onedayfrac/3.)):]:
 			nightcount += 1
 
 			if ztf_offset < 0:
@@ -239,7 +241,7 @@ class mkSimlibs:
 			randval = random.uniform(0, 1)
 			if randval > haleakaladict[mjd_to_month(m)] or simperfect:
 				iLine = random.sample(range(len(glines)),1)[0]
-				if (not (nightcount - goffset/3)%1 and nightcount - goffset/3 >= 0) or simperfect:
+				if (not (nightcount - goffset/3)%(gcadence/3) and nightcount - goffset/3 >= 0) or simperfect:
 					for lines in [glines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -247,7 +249,7 @@ class mkSimlibs:
 						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
 						count += 1
 						ps1count += 1
-				if (not (nightcount - roffset/3)%1 and nightcount - roffset/3 >= 0) or simperfect:
+				if (not (nightcount - roffset/3)%(rcadence/3) and nightcount - roffset/3 >= 0) or simperfect:
 					for lines in [rlines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -255,7 +257,7 @@ class mkSimlibs:
 						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
 						count += 1
 						ps1count += 1
-				if (not (nightcount - ioffset/3)%1 and nightcount - ioffset/3 >= 0) or simperfect:
+				if (not (nightcount - ioffset/3)%(icadence/3) and nightcount - ioffset/3 >= 0) or simperfect:
 					for lines in [ilines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -263,7 +265,7 @@ class mkSimlibs:
 						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
 						count += 1
 						ps1count += 1
-				if (not (nightcount - zoffset/3)%1 and nightcount - zoffset/3 >= 0) or simperfect:
+				if (not (nightcount - zoffset/3)%(zcadence/3) and nightcount - zoffset/3 >= 0) or simperfect:
 					for lines in [zlines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -271,7 +273,7 @@ class mkSimlibs:
 						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
 						count += 1
 						ps1count += 1
-						
+
 				if not nightcount % gcadence or not nightcount % rcadence or not \
 				   nightcount % icadence or not nightcount % zcadence:
 					usednightcount += 1
@@ -289,7 +291,6 @@ class mkSimlibs:
 							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
 							count += 2
 
-				
 		fout = open(simlibfile,'w')
 		print(simlibheader%count,file=fout)
 		for l in simliblines:
@@ -300,27 +301,32 @@ class mkSimlibs:
 		#surveyarea = 2.*3600./20*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
 
 		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
-		surveyarea = 1.6*3600./27*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
+		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
 
 		return surveyarea
 	
 		
-	def mkinput(self,gcadence,rcadence,icadence,zcadence,inputfile,simlibfile,surveyarea,simperfect=False,batchtmpl=None):
+	def mkinput(self,gcadence,rcadence,icadence,zcadence,inputfile,simlibfile,surveyarea,simperfect=False,batchtmpl=None,exptime=15):
 
+		expadj = exptime/15.
+		
 		filtstr = ''
 		for filt,cadence in zip('grizXY',[gcadence,rcadence,icadence,zcadence,3,3]):
 			if cadence: filtstr += filt
 
 		fout = open(inputfile.replace('.','_ia.'),'w')
 		print(iainputheader%(
-			inputfile.split('/')[-1].split('.')[0]+'_ia',simlibfile,filtstr,surveyarea),file=fout)
+			inputfile.split('/')[-1].split('.')[0]+'_ia',simlibfile,
+			expadj,expadj,expadj,expadj,filtstr,surveyarea),file=fout)
 		if simperfect:
 			print('GENPERFECT: 1',file=fout)
 		fout.close()
 
 		fout = open(inputfile.replace('.','_nonia.'),'w')
 		print(noniainputheader%(
-			inputfile.split('/')[-1].split('.')[0]+'_nonia',simlibfile,filtstr,surveyarea),file=fout)
+			inputfile.split('/')[-1].split('.')[0]+'_nonia',simlibfile,
+			expadj,expadj,expadj,expadj,
+			filtstr,surveyarea),file=fout)
 		if simperfect:
 			print('GENPERFECT: 1',file=fout)
 		fout.close()
@@ -413,10 +419,10 @@ CIDOFF: 500
 KCOR_FILE:  $PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
 APPLY_SEARCHEFF_OPT: 0
 
-EXPOSURE_TIME_FILTER: g 1.0
-EXPOSURE_TIME_FILTER: r 1.0
-EXPOSURE_TIME_FILTER: i 1.0
-EXPOSURE_TIME_FILTER: z 1.0
+EXPOSURE_TIME_FILTER: g %.1f
+EXPOSURE_TIME_FILTER: r %.1f
+EXPOSURE_TIME_FILTER: i %.1f
+EXPOSURE_TIME_FILTER: z %.1f
 
 GENMAG_SMEAR_MODELNAME: G10
 # selection criteria for generation
@@ -489,10 +495,10 @@ CIDOFF: 500
 KCOR_FILE:  $PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
 APPLY_SEARCHEFF_OPT: 0
 
-EXPOSURE_TIME_FILTER: g 1.0
-EXPOSURE_TIME_FILTER: r 1.0
-EXPOSURE_TIME_FILTER: i 1.0
-EXPOSURE_TIME_FILTER: z 1.0
+EXPOSURE_TIME_FILTER: g %.1f
+EXPOSURE_TIME_FILTER: r %.1f
+EXPOSURE_TIME_FILTER: i %.1f
+EXPOSURE_TIME_FILTER: z %.1f
 
 SEARCHEFF_PIPELINE_FILE:  SEARCHEFF_PIPELINE_YSE.DAT
 SEARCHEFF_PIPELINE_LOGIC_FILE:  SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
@@ -571,10 +577,10 @@ APPLY_SEARCHEFF_OPT: 0
 SEARCHEFF_PIPELINE_FILE:  SEARCHEFF_PIPELINE_YSE.DAT
 SEARCHEFF_PIPELINE_LOGIC_FILE:  SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
 
-EXPOSURE_TIME_FILTER: g 1.0
-EXPOSURE_TIME_FILTER: r 1.0
-EXPOSURE_TIME_FILTER: i 1.0
-EXPOSURE_TIME_FILTER: z 1.0
+EXPOSURE_TIME_FILTER: g %.1f
+EXPOSURE_TIME_FILTER: r %.1f
+EXPOSURE_TIME_FILTER: i %.1f
+EXPOSURE_TIME_FILTER: z %.1f
 
 GENMAG_SMEAR_MODELNAME: G10
 # selection criteria for generation
@@ -857,14 +863,14 @@ if __name__ == "__main__":
 								  options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
 								  simperfect=options.perfect,
 								  ztf_offset=options.ztfoffset,
-								  onedayfrac=options.onedayfrac)
+								  onedayfrac=options.onedayfrac,exptime=options.exptime)
 		genversion = mks.mkinput(options.gcadence,options.rcadence,options.icadence,options.zcadence,
 								 options.inputfile,options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
-								 surveyarea,simperfect=options.perfect,batchtmpl=options.batchtmpl)
+								 surveyarea,simperfect=options.perfect,batchtmpl=options.batchtmpl,exptime=options.exptime)
 	
 	if options.sim:
-		#os.system('rm -r SIMLOGS_%s'%genversion)
-		#os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
+		os.system('rm -r SIMLOGS_%s'%genversion)
+		os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
 		
 		# check for job completion
 		print('waiting for job to finish...')
@@ -877,10 +883,10 @@ if __name__ == "__main__":
 			for line in simtext.split('\n'):
 				if '%s_'%genversion in line: job_complete = False
 		print('starting serialization step')
-		#serialize.main(genversion,verbose=True,filters='grizXY')
+		serialize.main(genversion,verbose=True,filters='grizXY')
 		os.system('cp $SNDATA_ROOT/SIM/%s/%s.DUMP dump/'%(genversion,genversion))
 
-		#serialize.main('%s_YOUNG'%genversion,verbose=True,filters='grizXY')		
+		serialize.main('%s_YOUNG'%genversion,verbose=True,filters='grizXY')		
 		os.system('cp $SNDATA_ROOT/SIM/%s_YOUNG/%s_YOUNG.DUMP dump/'%(genversion,genversion))
 
 		fulldatadict = {}
