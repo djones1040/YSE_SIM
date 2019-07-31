@@ -37,6 +37,7 @@ def parse_phot_table(table, rows, filters=None):
 		data[filt]['mjd'].append(row['MJD'])
 		data[filt]['fluxcal'].append(row['FLUXCAL'])
 		data[filt]['fluxcalerr'].append(row['FLUXCALERR'])
+		data[filt]['photflag'].append(row['PHOTFLAG'])
 #		data[filt]['snrmag20'].append(row['SIM_SNRMAG20'])
 		
 	return data
@@ -76,6 +77,7 @@ def parse_header_table(table, index=0, filters=None):
 	header['type'] = head['SIM_TYPE_INDEX']
 	# Peak MJD
 	header['pkmjd'] = head['SIM_PEAKMJD']
+	import pdb; pdb.set_trace()
 	# Peak magnitudes
 	for filt in filters:
 		header['pkmag_%s' % filt] = head['SIM_PEAKMAG_%s' % filt]
@@ -93,7 +95,7 @@ def parse_header_table(table, index=0, filters=None):
 	return header, rows
 
 
-def parse_model(dirpath):
+def parse_model(dirpath,filters=None):
 	"""
 	Parse all files in the provided directory and save relevant
 	information in a dictionary saved back to disk (and compressed)
@@ -113,29 +115,30 @@ def parse_model(dirpath):
 
 	"""
 	# get the filters
-	README_FILE = glob.glob('%s/*README'%dirpath)
-	if not len(README_FILE):
-		raise RuntimeError('README file doesn\'t exist in %s'%dirpath)
-	README_FILE = README_FILE[0]
-	
-	with open(README_FILE) as fin:
-		filters = ''
-		for line in fin:
-			if 'Generation FILTERS:' in line:
-				filters = line.split()[-1]
-				break
 	if not filters:
+		README_FILE = glob.glob('%s/*README'%dirpath)
+		if not len(README_FILE):
+			raise RuntimeError('README file doesn\'t exist in %s'%dirpath)
+		README_FILE = README_FILE[0]
+	
 		with open(README_FILE) as fin:
-			infile = ''
+			filters = ''
 			for line in fin:
-				if 'INFILE:' in line:
-					infile = line.split()[-1]
-					break
-		if not infile: raise RuntimeError('can\'t figure out filters!!')
-		with open(infile) as fin:
-			for line in fin:
-				if 'GENFILTERS' in line:
+				if 'Generation FILTERS:' in line:
 					filters = line.split()[-1]
+					break
+		if not filters:
+			with open(README_FILE) as fin:
+				infile = ''
+				for line in fin:
+					if 'INFILE:' in line:
+						infile = line.split()[-1]
+						break
+			if not infile: raise RuntimeError('can\'t figure out filters!!')
+			with open(infile) as fin:
+				for line in fin:
+					if 'GENFILTERS' in line:
+						filters = line.split()[-1]
 	if not filters: raise RuntimeError('can\'t figure out filters!!')
 
 	# List all header files in the given directory

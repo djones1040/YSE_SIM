@@ -12,7 +12,7 @@ from .validutils.io import save_compressed
 from .validutils.table import parse_model
 
 def main(simname,outfile_root=None,dirpath='$SNDATA_ROOT/SIM',
-		 verbose=False,save=True):
+		 verbose=False,save=True,filters=None):
 
 	tstart = time.time()
 	if not outfile_root:
@@ -22,7 +22,7 @@ def main(simname,outfile_root=None,dirpath='$SNDATA_ROOT/SIM',
 	filename = "{}.pkl.gz".format(outfile_root)
 	dirpath = os.path.expandvars('%s/%s'%(dirpath,simname))
 	
-	table = parse_model(dirpath)
+	table = parse_model(dirpath,filters=filters)
 	if save: save_compressed(table, filename)
 
 	if verbose:
