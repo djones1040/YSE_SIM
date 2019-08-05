@@ -203,8 +203,8 @@ class mkSimlibs:
 						count += 1
 						ps1count += 1
 
-				if not nightcount % gcadence or not nightcount % rcadence or not \
-				   nightcount % icadence or not nightcount % zcadence:
+				if not nightcount % gcadence - goffset or not nightcount % rcadence - roffset or not \
+				   nightcount % icadence - ioffset or not nightcount % zcadence - zoffset:
 					usednightcount += 1
 
 			if ztf_offset > 0:
@@ -274,8 +274,8 @@ class mkSimlibs:
 						count += 1
 						ps1count += 1
 						
-				if not nightcount % gcadence or not nightcount % rcadence or not \
-				   nightcount % icadence or not nightcount % zcadence:
+				if not nightcount % gcadence - goffset or not nightcount % rcadence - roffset or not \
+				   nightcount % icadence - ioffset or not nightcount % zcadence - zoffset:
 					usednightcount += 1
 
 			if ztf_offset > 0:
@@ -302,7 +302,7 @@ class mkSimlibs:
 
 		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
 		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
-
+		
 		return surveyarea
 	
 		
