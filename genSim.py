@@ -870,9 +870,9 @@ if __name__ == "__main__":
 								 surveyarea,simperfect=options.perfect,batchtmpl=options.batchtmpl,exptime=options.exptime)
 	
 	if options.sim:
-		#os.system('rm -r SIMLOGS_%s'%genversion)
-		#os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
-		
+		os.system('rm -r SIMLOGS_%s'%genversion)
+		os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
+
 		# check for job completion
 		print('waiting for job to finish...')
 		job_complete=False
