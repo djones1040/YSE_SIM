@@ -1,0 +1,5 @@
+# Variables are extracted from 
+#   FILE:  FITOPT000.ROOT 
+#   TABLE: FITRES 
+# 
+VARNAMES:  CID RA DECL TGAPMAX 

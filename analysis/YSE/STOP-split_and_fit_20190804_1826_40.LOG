@@ -1,0 +1,9 @@
+ Time stamp mis-match:  
+   Time of job submit:   '20190804_1826_40' 
+   Time in OUTDIR file : '20190804_1843_22'   
+
+ STOP process:
+   /project/rkessler/PRODUCTS/SNANA/SNANA/util/split_and_fit.pl YSE.nml MERGE -DATE_SUBMIT 20190804_1826_40 
+
+ BEWARE: there could be merge-interference in this output ! 
+
