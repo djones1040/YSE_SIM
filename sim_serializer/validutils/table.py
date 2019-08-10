@@ -77,7 +77,7 @@ def parse_header_table(table, index=0, filters=None):
 	header['type'] = head['SIM_TYPE_INDEX']
 	# Peak MJD
 	header['pkmjd'] = head['SIM_PEAKMJD']
-	import pdb; pdb.set_trace()
+
 	# Peak magnitudes
 	for filt in filters:
 		header['pkmag_%s' % filt] = head['SIM_PEAKMAG_%s' % filt]

@@ -121,6 +121,12 @@ class mkSimlibs:
 
 		return(parser)
 
+	def skynoisefrommaglim(self,maglim,zpt,areascale=3):
+
+		skysig = 1/np.sqrt(np.pi)/areascale*np.sqrt(0.25*((0.4*10**(0.4*(zpt-maglim)) + 5)**2. - 25))
+
+		return skysig
+	
 	def mksimlib(self,gcadence,rcadence,icadence,zcadence,
 				 goffset,roffset,ioffset,zoffset,
 				 simlibfile,simperfect=False,ztfsim=True,
@@ -145,13 +151,20 @@ class mkSimlibs:
 			mjd = np.arange(58240,58440,1)
 			#mjd = np.arange(58240,59000,1)
 
+		# mag lims with moon phase from Sofie
+		limmjdg,limmagg,limmjdr,limmagr,limmjdi,limmagi = getmjdmaglims()
+			
 		# nominal survey
 		count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
 		simliblines = []
-		# one-day survey
-		for m in mjd[:int(len(mjd)*(onedayfrac/3.))]:
+		for m in mjd:
 			nightcount += 1
 
+			maglimg = np.interp(m,limmjdg,limmagg)
+			maglimr = np.interp(m,limmjdr,limmagr)
+			maglimi = np.interp(m,limmjdi,limmagi)
+
+			
 			if ztf_offset < 0:
 				randval = random.uniform(0, 1)
 				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
@@ -161,79 +174,18 @@ class mkSimlibs:
 							line = lines[iLine][0]
 							linemjd = line.split()[1]
 							lineid = line.split()[2]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
-							count += 2
-							
-			# replace random weather with PS1 MD observations
-			# includes not much data at bright time
-			randval = random.uniform(0, 1)
-			if randval > haleakaladict[mjd_to_month(m)] or simperfect:
-				iLine = random.sample(range(len(glines)),1)[0]
-				if (not (nightcount - goffset/3)%(gcadence/3) and nightcount - goffset/3 >= 0) or simperfect:
-					for lines in [glines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
-						count += 1
-						ps1count += 1
-				if (not (nightcount - roffset/3)%(rcadence/3) and nightcount - roffset/3 >= 0) or simperfect:
-					for lines in [rlines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
-						count += 1
-						ps1count += 1
-				if (not (nightcount - ioffset/3)%(icadence/3) and nightcount - ioffset/3 >= 0) or simperfect:
-					for lines in [ilines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
-						count += 1
-						ps1count += 1
-				if (not (nightcount - zoffset/3)%(zcadence/3) and nightcount - zoffset/3 >= 0) or simperfect:
-					for lines in [zlines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
-						count += 1
-						ps1count += 1
+							skysig = line.split()[6]
+							linezpt = line.split()[10]
+							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							lineparts = line.split()
+							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
+							simlibline = " ".join(lineparts)
+							simliblines += [simlibline]
+							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigr; lineparts[3] = 'Y'
+							simlibline = " ".join(lineparts)
+							simliblines += [simlibline]
 
-				if not nightcount % gcadence - goffset or not nightcount % rcadence - roffset or not \
-				   nightcount % icadence - ioffset or not nightcount % zcadence - zoffset:
-					usednightcount += 1
-
-			if ztf_offset > 0:
-				randval = random.uniform(0, 1)
-				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
-					if not nightcount % 3 or simperfect:
-						iLine = random.sample(range(len(glines)),1)[0]
-						for lines in [rlines]:
-							line = lines[iLine][0]
-							linemjd = line.split()[1]
-							lineid = line.split()[2]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
-							count += 2
-
-		for m in mjd[int(len(mjd)*(onedayfrac/3.)):]:
-			nightcount += 1
-
-			if ztf_offset < 0:
-				randval = random.uniform(0, 1)
-				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
-					if not nightcount % 3 or simperfect:
-						iLine = random.sample(range(len(glines)),1)[0]
-						for lines in [rlines]:
-							line = lines[iLine][0]
-							linemjd = line.split()[1]
-							lineid = line.split()[2]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
 							count += 2
 
 			# replace random weather with PS1 MD observations
@@ -245,8 +197,15 @@ class mkSimlibs:
 					for lines in [glines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						lineid = int(line.split()[2])
+						skysig = line.split()[6]
+						linezpt = line.split()[10]
+						newskysig = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
+						lineparts = line.split()
+						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
+						simlibline = " ".join(lineparts)
+						simliblines += [simlibline]
+						
 						count += 1
 						ps1count += 1
 				if (not (nightcount - roffset) % rcadence and nightcount - roffset >= 0) or simperfect:
@@ -254,7 +213,14 @@ class mkSimlibs:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
 						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						skysig = line.split()[6]
+						linezpt = line.split()[10]
+						newskysig = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=2.1)
+						lineparts = line.split()
+						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
+						simlibline = " ".join(lineparts)
+						simliblines += [simlibline]
+						
 						count += 1
 						ps1count += 1
 				if (not (nightcount - ioffset) % icadence and nightcount - ioffset >= 0) or simperfect:
@@ -262,7 +228,15 @@ class mkSimlibs:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
 						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						skysig = line.split()[6]
+						linezpt = line.split()[10]
+						newskysig = self.skynoisefrommaglim(maglimi,float(linezpt),areascale=2.1)
+						lineparts = line.split()
+						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
+						simlibline = " ".join(lineparts)
+						simliblines += [simlibline]
+						line = lines[iLine][0]
+						
 						count += 1
 						ps1count += 1
 				if (not (nightcount - zoffset) % zcadence and nightcount - zoffset >= 0) or simperfect:
@@ -270,7 +244,13 @@ class mkSimlibs:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
 						lineid = line.split()[2]
-						simliblines += [line.replace(linemjd,'%.2f'%m).replace(' %i '%int(lineid),' %i '%count)]
+						skysig = line.split()[6]
+						linezpt = line.split()[10]
+						lineparts = line.split()
+						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count
+						simlibline = " ".join(lineparts)
+						simliblines += [simlibline]
+
 						count += 1
 						ps1count += 1
 						
@@ -287,26 +267,194 @@ class mkSimlibs:
 							line = lines[iLine][0]
 							linemjd = line.split()[1]
 							lineid = line.split()[2]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' X ')]
-							simliblines += [line.replace(linemjd,'%.2f'%(m+ztf_offset)).replace(' %i '%int(lineid),' %i '%count).replace(' r ',' Y ')]
+							skysig = line.split()[6]
+							linezpt = line.split()[10]
+							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							lineparts = line.split()
+							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
+							simlibline = " ".join(lineparts)
+							simliblines += [simlibline]
+							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%(count+1); lineparts[6] = '%.2f'%newskysigr; lineparts[3] = 'Y'
+							simlibline = " ".join(lineparts)
+							simliblines += [simlibline]
+							
 							count += 2
 
+
 		fout = open(simlibfile,'w')
-		print(simlibheader%count,file=fout)
-		for l in simliblines:
-			print(l,file=fout)
+		print(simlibheader,file=fout)
+		fout.close()
+
+		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)
+		nfields = int(surveyarea/(7*(np.pi/180.)**2.))
+
+		fout = open(simlibfile,'a')
+		for i in range(nfields):
+			print("""LIBID:		  %i		# cadence from 2016W^@
+RA:	   37.665487		DECL:	42.235969	  MWEBV:  0.059
+NOBS:	%i		PIXSIZE:  0.500		REDSHIFT: 0.01925	  PEAKMJD: 57417.953
+SUBSURVEY: PS1MD   FIELD: NORMAL"""%(i+1,count),file=fout)
+			for l in simliblines:
+				print(l,file=fout)
+			print("""#  MJD	   IDUM	 BAND  GAIN RDNOISE	 SKYSIG	   PSF1 PSF2 PSFRAT	   ZP	ZPERR
+END_LIBID:		1
+
+		""",file=fout)
+		fout.close()
+		
+		# one-day survey
+		count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
+		simliblines_oneday = []
+		for m in mjd:
+			nightcount += 1
+
+			maglimg = np.interp(m,limmjdg,limmagg)
+			maglimr = np.interp(m,limmjdr,limmagr)
+			maglimi = np.interp(m,limmjdi,limmagi)
+			
+			if ztf_offset < 0:
+				randval = random.uniform(0, 1)
+				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
+					if not nightcount % 3 or simperfect:
+						iLine = random.sample(range(len(glines)),1)[0]
+						for lines in [rlines]:
+							line = lines[iLine][0]
+							linemjd = line.split()[1]
+							lineid = line.split()[2]
+							skysig = line.split()[6]
+							linezpt = line.split()[10]
+							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							lineparts = line.split()
+							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
+							simlibline = " ".join(lineparts)
+							simliblines_oneday += [simlibline]
+							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%(count+1); lineparts[6] = '%.2f'%newskysigr; lineparts[3] = 'Y'
+							simlibline = " ".join(lineparts)
+							simliblines_oneday += [simlibline]
+
+							count += 2
+							
+			# replace random weather with PS1 MD observations
+			# includes not much data at bright time
+			randval = random.uniform(0, 1)
+			if randval > haleakaladict[mjd_to_month(m)] or simperfect:
+				iLine = random.sample(range(len(glines)),1)[0]
+				if (not (nightcount - goffset/3)%(gcadence/3) and nightcount - goffset/3 >= 0) or simperfect:
+					for lines in [glines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = int(line.split()[2])
+						skysig = line.split()[6]
+						linezpt = line.split()[10]
+						newskysig = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
+						lineparts = line.split()
+						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
+						simlibline = " ".join(lineparts)
+						simliblines_oneday += [simlibline]
+						
+						count += 1
+						ps1count += 1
+				if (not (nightcount - roffset/3)%(rcadence/3) and nightcount - roffset/3 >= 0) or simperfect:
+					for lines in [rlines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = line.split()[2]
+						skysig = line.split()[6]
+						linezpt = line.split()[10]
+						newskysig = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=2.1)
+						lineparts = line.split()
+						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
+						simlibline = " ".join(lineparts)
+						simliblines_oneday += [simlibline]
+						
+						count += 1
+						ps1count += 1
+				if (not (nightcount - ioffset/3)%(icadence/3) and nightcount - ioffset/3 >= 0) or simperfect:
+					for lines in [ilines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = line.split()[2]
+						skysig = line.split()[6]
+						linezpt = line.split()[10]
+						newskysig = self.skynoisefrommaglim(maglimi,float(linezpt),areascale=2.1)
+						lineparts = line.split()
+						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
+						simlibline = " ".join(lineparts)
+						simliblines_oneday += [simlibline]
+						
+						count += 1
+						ps1count += 1
+				if (not (nightcount - zoffset/3)%(zcadence/3) and nightcount - zoffset/3 >= 0) or simperfect:
+					for lines in [zlines]:
+						line = lines[iLine][0]
+						linemjd = line.split()[1]
+						lineid = line.split()[2]
+						skysig = line.split()[6]
+						linezpt = line.split()[10]
+						lineparts = line.split()
+						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count
+						simlibline = " ".join(lineparts)
+						simliblines_oneday += [simlibline]
+
+						count += 1
+						ps1count += 1
+
+				if not nightcount % gcadence - goffset or not nightcount % rcadence - roffset or not \
+				   nightcount % icadence - ioffset or not nightcount % zcadence - zoffset:
+					usednightcount += 1
+
+			if ztf_offset > 0:
+				randval = random.uniform(0, 1)
+				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
+					if not nightcount % 3 or simperfect:
+						iLine = random.sample(range(len(glines)),1)[0]
+						for lines in [rlines]:
+							line = lines[iLine][0]
+							linemjd = line.split()[1]
+							lineid = line.split()[2]
+							skysig = line.split()[6]
+							linezpt = line.split()[10]
+							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							lineparts = line.split()
+							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
+							simlibline = " ".join(lineparts)
+							simliblines_oneday += [simlibline]
+							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%(count+1); lineparts[6] = '%.2f'%newskysigr; lineparts[3] = 'Y'
+							simlibline = " ".join(lineparts)
+							simliblines_oneday += [simlibline]
+						
+							count += 2
+							
+
+		surveyarea_oneday = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*onedayfrac
+		nfields_oneday = surveyarea_oneday/(7*(np.pi/180.)**2.)
+
+		fout = open(simlibfile,'a')
+		for i in range(int(nfields_oneday)):
+			print("""LIBID:		  %i		# cadence from 2016W^@
+RA:	   37.665487		DECL:	42.235969	  MWEBV:  0.059
+NOBS:	%i		PIXSIZE:  0.500		REDSHIFT: 0.01925	  PEAKMJD: 57417.953
+SUBSURVEY: PS1MD   FIELD: ONEDAY"""%(i+nfields,count),file=fout)			
+			for l in simliblines_oneday:
+				print(l,file=fout)
+			print("""#  MJD	   IDUM	 BAND  GAIN RDNOISE	 SKYSIG	   PSF1 PSF2 PSFRAT	   ZP	ZPERR
+END_LIBID:		2
+""",file=fout)
 		print(simlibfooter,file=fout)
 		fout.close()
 
 		#surveyarea = 2.*3600./20*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
 
 		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
-		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
 		
-		return surveyarea
+		return 7*(np.pi/180.)**2.,7*(np.pi/180.)**2.
 	
 		
-	def mkinput(self,gcadence,rcadence,icadence,zcadence,inputfile,simlibfile,surveyarea,simperfect=False,batchtmpl=None,exptime=15):
+	def mkinput(self,gcadence,rcadence,icadence,zcadence,inputfile,simlibfile,
+				surveyarea,surveyarea_oneday,simperfect=False,batchtmpl=None,exptime=15):
 
 		expadj = exptime/15.
 		
@@ -339,7 +487,7 @@ class mkSimlibs:
 		if simperfect:
 			zmax = 0.2
 			cutwinstr = 'GENOPT: CUTWIN_SNRMAX 50.0 grizXY 2 -20. 80.'
-			ratestr = 'GENOPT(NON1A): DNDZ_PEC1A POWERLAW 1E-5 2.15\nGENOPT(NON1A): DNDZ POWERLAW 1E-4   4.5'
+			ratestr = 'GENOPT(NON1A): DNDZ_PEC1A POWERLAW 1E-5 2.15\nGENOPT(NON1A): DNDZ POWERLAW 1E-4	 4.5'
 		else:
 			zmax = 0.5
 			cutwinstr = ''
@@ -407,16 +555,38 @@ def getlines(simlibfile = 'snanasimlibs/found_yse.simlib'):
 			
 	return(outlinesg,outlinesr,outlinesi,outlinesz)
 
+def getmjdmaglims():
+
+	fin = open('weather/predictions_g.txt','r')
+	lines = fin.readlines()
+	targetgmjd = np.array(lines[0].replace('\n','').split()).astype(float)
+	targetglim = np.array(lines[1].replace('\n','').split()).astype(float)
+	fin.close()
+
+	fin = open('weather/predictions_r.txt','r')
+	lines = fin.readlines()
+	targetrmjd = np.array(lines[0].replace('\n','').split()).astype(float)
+	targetrlim = np.array(lines[1].replace('\n','').split()).astype(float)
+	fin.close()
+
+	fin = open('weather/predictions_i.txt','r')
+	lines = fin.readlines()
+	targetimjd = np.array(lines[0].replace('\n','').split()).astype(float)
+	targetilim = np.array(lines[1].replace('\n','').split()).astype(float)
+	fin.close()
+
+	return targetgmjd,targetglim,targetrmjd,targetrlim,targetimjd,targetilim
+
 iainputheader = """
-GENVERSION: %s         # simname
-GENSOURCE:  RANDOM   
-GENMODEL:   SALT2.Guy10_UV2IR
+GENVERSION: %s		   # simname
+GENSOURCE:	RANDOM	 
+GENMODEL:	SALT2.Guy10_UV2IR
 GENPREEFIX: YSE_IA
 
 SIMLIB_FILE: %s # simlib file
 
 CIDOFF: 500
-KCOR_FILE:  $PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
+KCOR_FILE:	$PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
 APPLY_SEARCHEFF_OPT: 0
 
 EXPOSURE_TIME_FILTER: g %.1f
@@ -426,73 +596,73 @@ EXPOSURE_TIME_FILTER: z %.1f
 
 GENMAG_SMEAR_MODELNAME: G10
 # selection criteria for generation
-GENFILTERS:       %s
+GENFILTERS:		  %s
 
-GENSIGMA_SEARCH_PEAKMJD:  1.0         # sigma-smearing for  SEARCH_PEAKMJD (days)
+GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
 GENRANGE_PEAKMJD:  58240  59617
-SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
+SOLID_ANGLE(NORMAL+ONEDAY): %.3f # 0.148 # 1 field, 7 sq degreees *7
 # baseline for 4 filters should be 630 degrees (0.192 steradians)
 
 SEARCHEFF_PIPELINE_FILE:  SEARCHEFF_PIPELINE_YSE.DAT
-SEARCHEFF_PIPELINE_LOGIC_FILE:  SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
+SEARCHEFF_PIPELINE_LOGIC_FILE:	SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
 
-GENRANGE_REDSHIFT:  0.001    0.5
-GENSIGMA_REDSHIFT:  0.000001
-GENRANGE_TREST:   -100.0    80.0     # rest epoch relative to peak (days)
+GENRANGE_REDSHIFT:	0.001	 0.5
+GENSIGMA_REDSHIFT:	0.000001
+GENRANGE_TREST:	  -100.0	80.0	 # rest epoch relative to peak (days)
 
-GENMEAN_RV:         3.1               # mean RV to generate
+GENMEAN_RV:			3.1				  # mean RV to generate
 
 OPT_MWEBV: 1
 
-RANSEED: 128473       # random number seed
+RANSEED: 128473		  # random number seed
 
 # smear flags: 0=off, 1=on
-SMEARFLAG_FLUX:    1  # photo-stat smearing of signal, sky, etc ...
+SMEARFLAG_FLUX:	   1  # photo-stat smearing of signal, sky, etc ...
 SMEARFLAG_ZEROPT:  1  # smear zero-point with zptsig
 
-# SEARCHEFF_SPEC_FILE:  SEARCHEFF_SPEC_MF_final.DAT #this is the big one for now.
-APPLY_CUTWIN_OPT:     1
-CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
+# SEARCHEFF_SPEC_FILE:	SEARCHEFF_SPEC_MF_final.DAT #this is the big one for now.
+APPLY_CUTWIN_OPT:	  1
+CUTWIN_NEPOCH:	 5 -5.				# require 5 epochs (no S/N requirement)
 CUTWIN_TRESTMIN: -20  10
 CUTWIN_TRESTMAX:   9  40
-CUTWIN_MWEBV:      0 .20
+CUTWIN_MWEBV:	   0 .20
 
 FORMAT_MASK:  2 # terse format
-CUTWIN_SNRMAX:   5.0 grizXY 2 -20. 80.  # require 1 of griz with S/N > 5
+CUTWIN_SNRMAX:	 5.0 grizXY 2 -20. 80.	# require 1 of griz with S/N > 5
 
-GENMEAN_SALT2x1:     0.703
-GENRANGE_SALT2x1:   -5.0  +4.0     # x1 (stretch) range
-GENSIGMA_SALT2x1:    2.15  0.472      # bifurcated sigmas
+GENMEAN_SALT2x1:	 0.703
+GENRANGE_SALT2x1:	-5.0  +4.0	   # x1 (stretch) range
+GENSIGMA_SALT2x1:	 2.15  0.472	  # bifurcated sigmas
 
-GENMEAN_SALT2c:     -0.04
-GENRANGE_SALT2c:   -0.4   0.4     # color range
-GENSIGMA_SALT2c:    0.033   0.125     # bifurcated sigmas
+GENMEAN_SALT2c:		-0.04
+GENRANGE_SALT2c:   -0.4	  0.4	  # color range
+GENSIGMA_SALT2c:	0.033	0.125	  # bifurcated sigmas
 
 # SALT2 alpha and beta
 
-GENMEAN_SALT2ALPHA:   0.14
-GENMEAN_SALT2BETA:   3.1
+GENMEAN_SALT2ALPHA:	  0.14
+GENMEAN_SALT2BETA:	 3.1
 
 # cosmological params for lightcurve generation and redshift distribution
 OMEGA_MATTER:  0.3
 OMEGA_LAMBDA:  0.7
-W0_LAMBDA:    -1.00
-H0:           70.0   
+W0_LAMBDA:	  -1.00
+H0:			  70.0	 
 
-SIMGEN_DUMP:  8  CID  Z  PEAKMJD SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
+SIMGEN_DUMP:  8	 CID  Z	 PEAKMJD SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
 """
 
 noniainputheader = """
-GENVERSION: %s         # simname
-GENSOURCE:  RANDOM   
-GENMODEL:   NON1A
+GENVERSION: %s		   # simname
+GENSOURCE:	RANDOM	 
+GENMODEL:	NON1A
 GENPREEFIX: YSE_IA
 
 SIMLIB_FILE: %s # simlib file
 
 CIDOFF: 500
-KCOR_FILE:  $PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
+KCOR_FILE:	$PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
 APPLY_SEARCHEFF_OPT: 0
 
 EXPOSURE_TIME_FILTER: g %.1f
@@ -501,81 +671,81 @@ EXPOSURE_TIME_FILTER: i %.1f
 EXPOSURE_TIME_FILTER: z %.1f
 
 SEARCHEFF_PIPELINE_FILE:  SEARCHEFF_PIPELINE_YSE.DAT
-SEARCHEFF_PIPELINE_LOGIC_FILE:  SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
+SEARCHEFF_PIPELINE_LOGIC_FILE:	SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
 
 GENMAG_SMEAR_MODELNAME: G10
 # selection criteria for generation
-GENFILTERS:       %s
+GENFILTERS:		  %s
 
-GENSIGMA_SEARCH_PEAKMJD:  1.0         # sigma-smearing for  SEARCH_PEAKMJD (days)
+GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
 GENRANGE_PEAKMJD:  58240  59617
-SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
+SOLID_ANGLE(NORMAL+ONEDAY): %.3f # 0.148 # 1 field, 7 sq degreees *7
 # baseline for 4 filters should be 630 degrees (0.192 steradians)
 
-GENRANGE_REDSHIFT:  0.001    0.5
-GENSIGMA_REDSHIFT:  0.000001
-GENRANGE_TREST:   -100.0    80.0     # rest epoch relative to peak (days)
+GENRANGE_REDSHIFT:	0.001	 0.5
+GENSIGMA_REDSHIFT:	0.000001
+GENRANGE_TREST:	  -100.0	80.0	 # rest epoch relative to peak (days)
 
-GENMEAN_RV:         3.1               # mean RV to generate
+GENMEAN_RV:			3.1				  # mean RV to generate
 
 OPT_MWEBV: 1
 
-RANSEED: 128473       # random number seed
+RANSEED: 128473		  # random number seed
 
 # smear flags: 0=off, 1=on
-SMEARFLAG_FLUX:    1  # photo-stat smearing of signal, sky, etc ...
+SMEARFLAG_FLUX:	   1  # photo-stat smearing of signal, sky, etc ...
 SMEARFLAG_ZEROPT:  1  # smear zero-point with zptsig
 
-# SEARCHEFF_SPEC_FILE:  SEARCHEFF_SPEC_MF_final.DAT #this is the big one for now.
-APPLY_CUTWIN_OPT:     1
-CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
+# SEARCHEFF_SPEC_FILE:	SEARCHEFF_SPEC_MF_final.DAT #this is the big one for now.
+APPLY_CUTWIN_OPT:	  1
+CUTWIN_NEPOCH:	 5 -5.				# require 5 epochs (no S/N requirement)
 CUTWIN_TRESTMIN: -20  10
 CUTWIN_TRESTMAX:   9  40
-CUTWIN_MWEBV:      0 .20
+CUTWIN_MWEBV:	   0 .20
 
 FORMAT_MASK:  2 # terse format
-CUTWIN_SNRMAX:   5.0 grizXY 2 -20. 80.  # require 1 of griz with S/N > 5
+CUTWIN_SNRMAX:	 5.0 grizXY 2 -20. 80.	# require 1 of griz with S/N > 5
 
-GENMEAN_SALT2x1:     0.703
-GENRANGE_SALT2x1:   -5.0  +4.0     # x1 (stretch) range
-GENSIGMA_SALT2x1:    2.15  0.472      # bifurcated sigmas
-#GENSIGMA_SALT2x1:    0.1  0.1      # bifurcated sigmas
+GENMEAN_SALT2x1:	 0.703
+GENRANGE_SALT2x1:	-5.0  +4.0	   # x1 (stretch) range
+GENSIGMA_SALT2x1:	 2.15  0.472	  # bifurcated sigmas
+#GENSIGMA_SALT2x1:	  0.1  0.1		# bifurcated sigmas
 
-GENMEAN_SALT2c:     -0.04
-GENRANGE_SALT2c:   -0.4   0.4     # color range
-GENSIGMA_SALT2c:    0.033   0.125     # bifurcated sigmas
+GENMEAN_SALT2c:		-0.04
+GENRANGE_SALT2c:   -0.4	  0.4	  # color range
+GENSIGMA_SALT2c:	0.033	0.125	  # bifurcated sigmas
 
 # SALT2 alpha and beta
 
-GENMEAN_SALT2ALPHA:   0.14
-GENMEAN_SALT2BETA:   3.1
+GENMEAN_SALT2ALPHA:	  0.14
+GENMEAN_SALT2BETA:	 3.1
 
 # cosmological params for lightcurve generation and redshift distribution
 OMEGA_MATTER:  0.3
 OMEGA_LAMBDA:  0.7
-W0_LAMBDA:    -1.00
-H0:           70.0   
+W0_LAMBDA:	  -1.00
+H0:			  70.0	 
 
-SIMGEN_DUMP:  8  CID  Z  PEAKMJD SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
+SIMGEN_DUMP:  8	 CID  Z	 PEAKMJD SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
 
 INPUT_FILE_INCLUDE: LFs/SIMGEN_INCLUDE_NON1A_J17-beforeAdjust.INPUT
 """
 
 noniainputheader_young = """
-GENVERSION: %s         # simname
-GENSOURCE:  RANDOM   
-GENMODEL:   NON1A
+GENVERSION: %s		   # simname
+GENSOURCE:	RANDOM	 
+GENMODEL:	NON1A
 GENPREEFIX: YSE_IA
 
 SIMLIB_FILE: %s # simlib file
 
 CIDOFF: 500
-KCOR_FILE:  $PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
+KCOR_FILE:	$PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
 APPLY_SEARCHEFF_OPT: 0
 
 SEARCHEFF_PIPELINE_FILE:  SEARCHEFF_PIPELINE_YSE.DAT
-SEARCHEFF_PIPELINE_LOGIC_FILE:  SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
+SEARCHEFF_PIPELINE_LOGIC_FILE:	SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
 
 EXPOSURE_TIME_FILTER: g %.1f
 EXPOSURE_TIME_FILTER: r %.1f
@@ -584,59 +754,59 @@ EXPOSURE_TIME_FILTER: z %.1f
 
 GENMAG_SMEAR_MODELNAME: G10
 # selection criteria for generation
-GENFILTERS:       %s
+GENFILTERS:		  %s
 
-GENSIGMA_SEARCH_PEAKMJD:  1.0         # sigma-smearing for  SEARCH_PEAKMJD (days)
+GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
 GENRANGE_PEAKMJD:  58240  59617
 SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
 # baseline for 4 filters should be 630 degrees (0.192 steradians)
 
-GENRANGE_REDSHIFT:  0.001    0.5
-GENSIGMA_REDSHIFT:  0.000001
-GENRANGE_TREST:   -100.0    80.0     # rest epoch relative to peak (days)
+GENRANGE_REDSHIFT:	0.001	 0.5
+GENSIGMA_REDSHIFT:	0.000001
+GENRANGE_TREST:	  -100.0	80.0	 # rest epoch relative to peak (days)
 
-GENMEAN_RV:         3.1               # mean RV to generate
+GENMEAN_RV:			3.1				  # mean RV to generate
 
 OPT_MWEBV: 1
 
-RANSEED: 128473       # random number seed
+RANSEED: 128473		  # random number seed
 
 # smear flags: 0=off, 1=on
-SMEARFLAG_FLUX:    1  # photo-stat smearing of signal, sky, etc ...
+SMEARFLAG_FLUX:	   1  # photo-stat smearing of signal, sky, etc ...
 SMEARFLAG_ZEROPT:  1  # smear zero-point with zptsig
 
-# SEARCHEFF_SPEC_FILE:  SEARCHEFF_SPEC_MF_final.DAT #this is the big one for now.
-APPLY_CUTWIN_OPT:     1
-CUTWIN_NEPOCH:   5 -5.              # require 5 epochs (no S/N requirement)
+# SEARCHEFF_SPEC_FILE:	SEARCHEFF_SPEC_MF_final.DAT #this is the big one for now.
+APPLY_CUTWIN_OPT:	  1
+CUTWIN_NEPOCH:	 5 -5.				# require 5 epochs (no S/N requirement)
 CUTWIN_TRESTMIN: -20  10
 CUTWIN_TRESTMAX:   9  40
-CUTWIN_MWEBV:      0 .20
+CUTWIN_MWEBV:	   0 .20
 
 FORMAT_MASK:  2 # terse format
-CUTWIN_SNRMAX:   5.0 grizXY 2 -20. 80.  # require 1 of griz with S/N > 5
+CUTWIN_SNRMAX:	 5.0 grizXY 2 -20. 80.	# require 1 of griz with S/N > 5
 
-GENMEAN_SALT2x1:     0.703
-GENRANGE_SALT2x1:   -5.0  +4.0     # x1 (stretch) range
-GENSIGMA_SALT2x1:    2.15  0.472      # bifurcated sigmas
-#GENSIGMA_SALT2x1:    0.1  0.1      # bifurcated sigmas
+GENMEAN_SALT2x1:	 0.703
+GENRANGE_SALT2x1:	-5.0  +4.0	   # x1 (stretch) range
+GENSIGMA_SALT2x1:	 2.15  0.472	  # bifurcated sigmas
+#GENSIGMA_SALT2x1:	  0.1  0.1		# bifurcated sigmas
 
-GENMEAN_SALT2c:     -0.04
-GENRANGE_SALT2c:   -0.4   0.4     # color range
-GENSIGMA_SALT2c:    0.033   0.125     # bifurcated sigmas
+GENMEAN_SALT2c:		-0.04
+GENRANGE_SALT2c:   -0.4	  0.4	  # color range
+GENSIGMA_SALT2c:	0.033	0.125	  # bifurcated sigmas
 
 # SALT2 alpha and beta
 
-GENMEAN_SALT2ALPHA:   0.14
-GENMEAN_SALT2BETA:   3.1
+GENMEAN_SALT2ALPHA:	  0.14
+GENMEAN_SALT2BETA:	 3.1
 
 # cosmological params for lightcurve generation and redshift distribution
 OMEGA_MATTER:  0.3
 OMEGA_LAMBDA:  0.7
-W0_LAMBDA:    -1.00
-H0:           70.0   
+W0_LAMBDA:	  -1.00
+H0:			  70.0	 
 
-SIMGEN_DUMP:  8  CID  Z  PEAKMJD SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
+SIMGEN_DUMP:  8	 CID  Z	 PEAKMJD SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
 
 PATH_NON1ASED: /project/rkessler/SURVEYS/YSE/USERS/djones/YSE_SIM/LFs/NON1A
 INPUT_FILE_INCLUDE: SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
@@ -657,59 +827,52 @@ SKYSIG_UNIT:	ADU_PER_SQARCSEC
 # Assume SKYMAG(  8679.) = 18.10 mag/asec^2
 # Assume SKYMAG( 10095.) = 17.90 mag/asec^2
 
-FLUXERR_COR:  grizXY  -0.90      4.7703  1.0526  1.0000  0.8650  4.7703  1.0526
-FLUXERR_COR:  grizXY  -0.70      5.3170  1.0000  1.0000  1.3651  5.3170  1.0000
-FLUXERR_COR:  grizXY  -0.50      2.3181  1.7215  1.3091  0.7351  2.3181  1.7215
-FLUXERR_COR:  grizXY  -0.30      3.3645  1.8474  1.1026  0.7446  3.3645  1.8474
-FLUXERR_COR:  grizXY  -0.10      3.1311  2.0894  1.0315  1.0230  3.1311  2.0894
-FLUXERR_COR:  grizXY   0.10      3.3423  2.1468  1.6439  1.0871  3.3423  2.1468
-FLUXERR_COR:  grizXY   0.30      3.0158  2.8774  1.2655  1.1967  3.0158  2.8774
-FLUXERR_COR:  grizXY   0.50      3.1574  2.2492  2.1569  1.2198  3.1574  2.2492
-FLUXERR_COR:  grizXY   0.70      2.3857  2.4199  1.5264  1.2647  2.3857  2.4199
-FLUXERR_COR:  grizXY   0.90      2.2685  2.1145  1.4510  1.2045  2.2685  2.1145
-FLUXERR_COR:  grizXY   1.10      2.0670  1.8696  1.3235  1.0674  2.0670  1.8696
-FLUXERR_COR:  grizXY   1.30      1.8561  1.7418  1.1890  1.1428  1.8561  1.7418
-FLUXERR_COR:  grizXY   1.50      1.4960  1.4025  1.1767  1.0346  1.4960  1.4025
-FLUXERR_COR:  grizXY   1.70      1.4736  1.2986  1.0032  1.2882  1.4736  1.2986
-FLUXERR_COR:  grizXY   1.90      1.1383  1.1056  1.0742  1.0000  1.1383  1.1056
-FLUXERR_COR:  grizXY   2.10      1.6320  1.0000  1.0000  1.0000  1.6320  1.0000
-FLUXERR_COR:  grizXY   2.30      1.0000  1.0000  1.0000  1.0000  1.0000  1.0000
-FLUXERR_COR:  grizXY   2.50      1.0000  1.0000  1.0000  1.0000  1.0000  1.0000
-FLUXERR_COR:  grizXY   2.70      1.0000  1.0000  1.0000  1.0000  1.0000  1.0000
+FLUXERR_COR:  grizXY  -0.90		 4.7703	 1.0526	 1.0000	 0.8650	 4.7703	 1.0526
+FLUXERR_COR:  grizXY  -0.70		 5.3170	 1.0000	 1.0000	 1.3651	 5.3170	 1.0000
+FLUXERR_COR:  grizXY  -0.50		 2.3181	 1.7215	 1.3091	 0.7351	 2.3181	 1.7215
+FLUXERR_COR:  grizXY  -0.30		 3.3645	 1.8474	 1.1026	 0.7446	 3.3645	 1.8474
+FLUXERR_COR:  grizXY  -0.10		 3.1311	 2.0894	 1.0315	 1.0230	 3.1311	 2.0894
+FLUXERR_COR:  grizXY   0.10		 3.3423	 2.1468	 1.6439	 1.0871	 3.3423	 2.1468
+FLUXERR_COR:  grizXY   0.30		 3.0158	 2.8774	 1.2655	 1.1967	 3.0158	 2.8774
+FLUXERR_COR:  grizXY   0.50		 3.1574	 2.2492	 2.1569	 1.2198	 3.1574	 2.2492
+FLUXERR_COR:  grizXY   0.70		 2.3857	 2.4199	 1.5264	 1.2647	 2.3857	 2.4199
+FLUXERR_COR:  grizXY   0.90		 2.2685	 2.1145	 1.4510	 1.2045	 2.2685	 2.1145
+FLUXERR_COR:  grizXY   1.10		 2.0670	 1.8696	 1.3235	 1.0674	 2.0670	 1.8696
+FLUXERR_COR:  grizXY   1.30		 1.8561	 1.7418	 1.1890	 1.1428	 1.8561	 1.7418
+FLUXERR_COR:  grizXY   1.50		 1.4960	 1.4025	 1.1767	 1.0346	 1.4960	 1.4025
+FLUXERR_COR:  grizXY   1.70		 1.4736	 1.2986	 1.0032	 1.2882	 1.4736	 1.2986
+FLUXERR_COR:  grizXY   1.90		 1.1383	 1.1056	 1.0742	 1.0000	 1.1383	 1.1056
+FLUXERR_COR:  grizXY   2.10		 1.6320	 1.0000	 1.0000	 1.0000	 1.6320	 1.0000
+FLUXERR_COR:  grizXY   2.30		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
+FLUXERR_COR:  grizXY   2.50		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
+FLUXERR_COR:  grizXY   2.70		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
 
 BEGIN LIBGEN
 
 #--------------------------------------------
-LIBID:		  1		# cadence from 2016W^@
-RA:	   37.665487		DECL:	42.235969	  MWEBV:  0.059
-NOBS:	%i		PIXSIZE:  0.500		REDSHIFT: 0.01925	  PEAKMJD: 57417.953
-SUBSURVEY: PS1MD
 """
 
 simlibfooter = """
-#  MJD	   IDUM	 BAND  GAIN RDNOISE	 SKYSIG	   PSF1 PSF2 PSFRAT	   ZP	ZPERR
-END_LIBID:		1
-
 
 END_OF_SIMLIB:
 """
 
 mastertmpl = """
-BATCH_INFO:  sbatch  %s 20
+BATCH_INFO:	 sbatch	 %s 20
 
 # nominal generation
 
 GENVERSION: %s
 GENOPT(1A): DNDZ POWERLAW  2.6E-5  2.2
-GENOPT(NON1A): DNDZ POWERLAW 5E-5   4.5
-GENOPT(NON1A): DNDZ_PEC1A POWERLAW  2.6E-5  2.2
+GENOPT(NON1A): DNDZ POWERLAW 5E-5	4.5
+GENOPT(NON1A): DNDZ_PEC1A POWERLAW	2.6E-5	2.2
 GENOPT(NON1A): PATH_NON1ASED /project/rkessler/SURVEYS/YSE/USERS/djones/YSE_SIM/LFs/NON1A
 # new rates, allowing SN Iax to be 31%%
 
 GENVERSION: %s_YOUNG
 GENOPT(1A): DNDZ POWERLAW  2.6E-5  2.2
-GENOPT(NON1A): DNDZ POWERLAW 5E-5   4.5
-GENOPT(NON1A): DNDZ_PEC1A POWERLAW  2.6E-5  2.2
+GENOPT(NON1A): DNDZ POWERLAW 5E-5	4.5
+GENOPT(NON1A): DNDZ_PEC1A POWERLAW	2.6E-5	2.2
 GENOPT(NON1A): PATH_NON1ASED /project/rkessler/SURVEYS/YSE/USERS/djones/YSE_SIM/LFs/NON1A
 GENOPT(NON1A): INPUT_FILE_INCLUDE LFs/SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
 %s
@@ -719,7 +882,7 @@ GENOPT(NON1A): INPUT_FILE_INCLUDE LFs/SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
 
 ENDLIST_GENVERSION:
 
-NGEN_UNIT:  0.014  SEASONS
+NGEN_UNIT:	0.014  SEASONS
 # 0.286 seasons (1 year)/20 jobs
 
 # specify sim-input files for snlc_sim.exe
@@ -728,9 +891,9 @@ SIMGEN_INFILE_NONIa: %s
 
 # define required global items to ensure uniformity among all jobs
 H0: 70
-ZRANGE:      0.002  %.1f
-GENPREFIX:   %s          # prefix of all data filenames
-FORMAT_MASK: 48           # 2=TERSE    16=RanCID  32=FITS-FORMAT
+ZRANGE:		 0.002	%.1f
+GENPREFIX:	 %s			 # prefix of all data filenames
+FORMAT_MASK: 48			  # 2=TERSE	   16=RanCID  32=FITS-FORMAT
 RESET_CIDOFF: 2
 PATH_SNDATA_SIM:  $SCRATCH_SIMDIR
 
@@ -772,8 +935,8 @@ GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_SNI
 GENOPT: GENTYPE 52
 GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 
-# Superluminous SN:  SLSN-I
-GENVERSION:  %s_PLASTICC_MODEL95_SLSN-I
+# Superluminous SN:	 SLSN-I
+GENVERSION:	 %s_PLASTICC_MODEL95_SLSN-I
 GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_SLSN-I-MOSFIT.INPUT
 GENOPT: GENTYPE 95
 GENOPT: SEARCHEFF_SPEC_SCALE 1.0
@@ -785,13 +948,13 @@ GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 #GENOPT: SEARCHEFF_SPEC_FILE ZERO
 
 # Intermediate Luminosity Optical Transients (ILOT)
-GENVERSION:  %s_PLASTICC_MODEL99_ILOT
+GENVERSION:	 %s_PLASTICC_MODEL99_ILOT
 GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_ILOT-MOSFIT.INPUT
 GENOPT: GENTYPE 99
 GENOPT: SEARCHEFF_SPEC_FILE ZERO
 
 # Ca Rich Transients (CART)
-GENVERSION:  %s_PLASTICC_MODEL99_CART
+GENVERSION:	 %s_PLASTICC_MODEL99_CART
 GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_CART-MOSFIT.INPUT
 GENOPT: GENTYPE 99
 GENOPT: SEARCHEFF_SPEC_FILE ZERO
@@ -804,22 +967,22 @@ GENOPT: SEARCHEFF_SPEC_FILE ZERO
 #GENOPT: SEARCHEFF_SPEC_SCALE 1.00
 
 # MOSFIT-IIn
-GENVERSION:  %s_PLASTICC_MODEL42_SNIIn
+GENVERSION:	 %s_PLASTICC_MODEL42_SNIIn
 GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_SNIIn-MOSFIT.INPUT
-GENOPT: GENTYPE 42  SIMLIB_NREPEAT 2
+GENOPT: GENTYPE 42	SIMLIB_NREPEAT 2
 GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 
 # MOSFIT-Ibc
-GENVERSION:  %s_PLASTICC_MODEL62_SNIbc-MOSFIT
+GENVERSION:	 %s_PLASTICC_MODEL62_SNIbc-MOSFIT
 GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_SNIbc-MOSFIT.INPUT
-GENOPT: GENTYPE 62   SIMLIB_NREPEAT 4
+GENOPT: GENTYPE 62	 SIMLIB_NREPEAT 4
 GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 
 # Core collapse Type II using pca (5->12 on May 9 2018)
 # for end-of-challenge model release
 GENVERSION: %s_PLASTICC_MODEL42_SNII-NMF
 GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_SNII-NMF.INPUT
-GENOPT: GENTYPE 42  SIMLIB_NREPEAT 4
+GENOPT: GENTYPE 42	SIMLIB_NREPEAT 4
 GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 
 # - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -827,14 +990,14 @@ GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 # Core collapse Type II from K10 templates
 GENVERSION: %s_PLASTICC_MODEL42_SNII-Templates
 GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_SNII-Templates.INPUT
-GENOPT: GENTYPE 42   SIMLIB_NREPEAT 4
+GENOPT: GENTYPE 42	 SIMLIB_NREPEAT 4
 GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 
 # NON1ASED-Ibc
 # Core collapse Type Ibc from K10 templates
 GENVERSION: %s_PLASTICC_MODEL62_SNIbc-Templates
 GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_SNIbc-Templates.INPUT
-GENOPT: GENTYPE 62   SIMLIB_NREPEAT 4
+GENOPT: GENTYPE 62	 SIMLIB_NREPEAT 4
 GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 
 # - - - - - - - -
@@ -858,16 +1021,16 @@ if __name__ == "__main__":
 	options,  args = parser.parse_args()
 
 	if not options.sim or not options.fit:
-		surveyarea = mks.mksimlib(options.gcadence,options.rcadence,options.icadence,
-								  options.zcadence,options.goffset,options.roffset,
-								  options.ioffset,options.zoffset,
-								  options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
-								  simperfect=options.perfect,
-								  ztf_offset=options.ztfoffset,
-								  onedayfrac=options.onedayfrac,exptime=options.exptime)
+		surveyarea,surveyarea_oneday = mks.mksimlib(options.gcadence,options.rcadence,options.icadence,
+													options.zcadence,options.goffset,options.roffset,
+													options.ioffset,options.zoffset,
+													options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
+													simperfect=options.perfect,
+													ztf_offset=options.ztfoffset,
+													onedayfrac=options.onedayfrac,exptime=options.exptime)
 		genversion = mks.mkinput(options.gcadence,options.rcadence,options.icadence,options.zcadence,
 								 options.inputfile,options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
-								 surveyarea,simperfect=options.perfect,batchtmpl=options.batchtmpl,exptime=options.exptime)
+								 surveyarea,surveyarea_oneday,simperfect=options.perfect,batchtmpl=options.batchtmpl,exptime=options.exptime)
 	
 	if options.sim:
 		#os.system('rm -r SIMLOGS_%s'%genversion)
