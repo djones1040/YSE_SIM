@@ -69,7 +69,6 @@ def parse_header_table(table, index=0, filters=None):
 
 	header = {}
 	# SN ID
-#	import pdb; pdb.set_trace()
 	header['snid'] = int(head['SNID'])
 	# Redshift
 	header['z'] = head['SIM_REDSHIFT_HOST']

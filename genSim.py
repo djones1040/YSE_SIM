@@ -449,7 +449,7 @@ END_LIBID:		2
 
 		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
 		
-		return 7*(np.pi/180.)**2.,7*(np.pi/180.)**2.
+		return surveyarea/(1-onedayfrac),surveyarea/(1-onedayfrac)
 	
 		
 	def mkinput(self,gcadence,rcadence,icadence,zcadence,inputfile,simlibfile,
@@ -602,7 +602,9 @@ GENFILTERS:		  %s
 GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
 GENRANGE_PEAKMJD:  58240  59617
-SOLID_ANGLE(NORMAL+ONEDAY): %.3f # 0.148 # 1 field, 7 sq degreees *7
+GENRANGE_RA: -999 +999
+GENRANGE_DECL: -999 +999
+SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
 # baseline for 4 filters should be 630 degrees (0.192 steradians)
 
 SEARCHEFF_PIPELINE_FILE:  SEARCHEFF_PIPELINE_YSE.DAT
@@ -681,7 +683,9 @@ GENFILTERS:		  %s
 GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
 GENRANGE_PEAKMJD:  58240  59617
-SOLID_ANGLE(NORMAL+ONEDAY): %.3f # 0.148 # 1 field, 7 sq degreees *7
+GENRANGE_RA: -999 +999
+GENRANGE_DECL: -999 +999
+SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
 # baseline for 4 filters should be 630 degrees (0.192 steradians)
 
 GENRANGE_REDSHIFT:	0.001	 0.5
@@ -760,6 +764,8 @@ GENFILTERS:		  %s
 GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
 GENRANGE_PEAKMJD:  58240  59617
+GENRANGE_RA: -999 +999
+GENRANGE_DECL: -999 +999
 SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
 # baseline for 4 filters should be 630 degrees (0.192 steradians)
 
@@ -837,26 +843,6 @@ FLUXERR_COR: XYgriz  1.21 2.0638 1.8177 1.9606 1.7268 1.8920 1.3963
 FLUXERR_COR: XYgriz  1.63 1.5051 1.5201 1.4298 1.4441 1.4120 1.3013
 FLUXERR_COR: XYgriz  2.06 1.0000 1.0000 0.9500 0.9500 1.0500 1.0000
 FLUXERR_COR: XYgriz  2.48 1.0000 1.0000 0.9500 0.9500 1.0500 1.0000
-
-#FLUXERR_COR:  grizXY  -0.90		 4.7703	 1.0526	 1.0000	 0.8650	 4.7703	 1.0526
-#FLUXERR_COR:  grizXY  -0.70		 5.3170	 1.0000	 1.0000	 1.3651	 5.3170	 1.0000
-#FLUXERR_COR:  grizXY  -0.50		 2.3181	 1.7215	 1.3091	 0.7351	 2.3181	 1.7215
-#FLUXERR_COR:  grizXY  -0.30		 3.3645	 1.8474	 1.1026	 0.7446	 3.3645	 1.8474
-#FLUXERR_COR:  grizXY  -0.10		 3.1311	 2.0894	 1.0315	 1.0230	 3.1311	 2.0894
-#FLUXERR_COR:  grizXY   0.10		 3.3423	 2.1468	 1.6439	 1.0871	 3.3423	 2.1468
-#FLUXERR_COR:  grizXY   0.30		 3.0158	 2.8774	 1.2655	 1.1967	 3.0158	 2.8774
-#FLUXERR_COR:  grizXY   0.50		 3.1574	 2.2492	 2.1569	 1.2198	 3.1574	 2.2492
-#FLUXERR_COR:  grizXY   0.70		 2.3857	 2.4199	 1.5264	 1.2647	 2.3857	 2.4199
-#FLUXERR_COR:  grizXY   0.90		 2.2685	 2.1145	 1.4510	 1.2045	 2.2685	 2.1145
-#FLUXERR_COR:  grizXY   1.10		 2.0670	 1.8696	 1.3235	 1.0674	 2.0670	 1.8696
-#FLUXERR_COR:  grizXY   1.30		 1.8561	 1.7418	 1.1890	 1.1428	 1.8561	 1.7418
-#FLUXERR_COR:  grizXY   1.50		 1.4960	 1.4025	 1.1767	 1.0346	 1.4960	 1.4025
-#FLUXERR_COR:  grizXY   1.70		 1.4736	 1.2986	 1.0032	 1.2882	 1.4736	 1.2986
-#FLUXERR_COR:  grizXY   1.90		 1.1383	 1.1056	 1.0742	 1.0000	 1.1383	 1.1056
-#FLUXERR_COR:  grizXY   2.10		 1.6320	 1.0000	 1.0000	 1.0000	 1.6320	 1.0000
-#FLUXERR_COR:  grizXY   2.30		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
-#FLUXERR_COR:  grizXY   2.50		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
-#FLUXERR_COR:  grizXY   2.70		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
 
 BEGIN LIBGEN
 
@@ -1046,7 +1032,7 @@ if __name__ == "__main__":
 	if options.sim:
 		#os.system('rm -r SIMLOGS_%s'%genversion)
 		#os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
-		
+
 		# check for job completion
 		print('waiting for job to finish...')
 		job_complete=False
@@ -1070,10 +1056,13 @@ if __name__ == "__main__":
 							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL62_SNIbc-Templates',
 							  'PLASTICC_MODEL42_SNII-NMF','PLASTICC_MODEL42_SNII-Templates',
 							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL90_SNIa-SALT2']:
-			datadict = serialize.main('%s_%s'%(genversion,versionsuffix),verbose=True,save=False,
-									  filters='grizXY',dirpath='$SCRATCH_SIMDIR')
-			for k in datadict.keys():
-				fulldatadict[k] = datadict[k]
+			try:
+				datadict = serialize.main('%s_%s'%(genversion,versionsuffix),verbose=True,save=False,
+										  filters='grizXY',dirpath='$SCRATCH_SIMDIR')
+				for k in datadict.keys():
+					fulldatadict[k] = datadict[k]
+			except Exception as e:
+				print('error for %s: %s'%(versionsuffix,e))
 			os.system('cp $SCRATCH_SIMDIR/%s_%s/%s_%s.DUMP dump/'%(genversion,versionsuffix,genversion,versionsuffix))
 			os.system('cat $SCRATCH_SIMDIR/%s_%s/%s_%s.DUMP >> dump/%s_PLASTICC.dump'%(genversion,versionsuffix,genversion,versionsuffix,genversion))
 
