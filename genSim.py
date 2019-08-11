@@ -464,9 +464,13 @@ END_LIBID:		1
 						
 							count += 2
 		
-		surveyarea_oneday = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*onedayfrac
-		nfields_oneday = surveyarea_oneday/(7*(np.pi/180.)**2.)
-
+		if usednightcount > 0:
+			surveyarea_oneday = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*onedayfrac
+			nfields_oneday = surveyarea_oneday/(7*(np.pi/180.)**2.)
+		else:
+			surveyarea_oneday = 0
+			nfields_oneday = 0
+			
 		fout = open(simlibfile,'a')
 		for i in range(int(nfields_oneday)):
 			print("""LIBID:		  %i		# cadence from 2016W^@
