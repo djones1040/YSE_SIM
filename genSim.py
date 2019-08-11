@@ -163,7 +163,6 @@ class mkSimlibs:
 			maglimg = np.interp(m,limmjdg,limmagg)
 			maglimr = np.interp(m,limmjdr,limmagr)
 			maglimi = np.interp(m,limmjdi,limmagi)
-
 			
 			if ztf_offset < 0:
 				randval = random.uniform(0, 1)
@@ -236,7 +235,7 @@ class mkSimlibs:
 						simlibline = " ".join(lineparts)
 						simliblines += [simlibline]
 						line = lines[iLine][0]
-						
+
 						count += 1
 						ps1count += 1
 				if (not (nightcount - zoffset) % zcadence and nightcount - zoffset >= 0) or simperfect:
@@ -306,6 +305,7 @@ END_LIBID:		1
 		# one-day survey
 		count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
 		simliblines_oneday = []
+		rzpt,izpt = [],[]
 		for m in mjd:
 			nightcount += 1
 
@@ -368,7 +368,7 @@ END_LIBID:		1
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
 						simliblines_oneday += [simlibline]
-						
+
 						count += 1
 						ps1count += 1
 				if (not (nightcount - ioffset/3)%(icadence/3) and nightcount - ioffset/3 >= 0) or simperfect:
@@ -383,7 +383,7 @@ END_LIBID:		1
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
 						simliblines_oneday += [simlibline]
-						
+
 						count += 1
 						ps1count += 1
 				if (not (nightcount - zoffset/3)%(zcadence/3) and nightcount - zoffset/3 >= 0) or simperfect:
@@ -404,7 +404,7 @@ END_LIBID:		1
 				if not nightcount % gcadence - goffset or not nightcount % rcadence - roffset or not \
 				   nightcount % icadence - ioffset or not nightcount % zcadence - zoffset:
 					usednightcount += 1
-
+			
 			if ztf_offset > 0:
 				randval = random.uniform(0, 1)
 				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
@@ -427,8 +427,7 @@ END_LIBID:		1
 							simliblines_oneday += [simlibline]
 						
 							count += 2
-							
-
+		
 		surveyarea_oneday = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*onedayfrac
 		nfields_oneday = surveyarea_oneday/(7*(np.pi/180.)**2.)
 
@@ -464,7 +463,7 @@ END_LIBID:		2
 
 		fout = open(inputfile.replace('.','_ia.'),'w')
 		print(iainputheader%(
-			inputfile.split('/')[-1].split('.')[0]+'_ia',simlibfile,
+			inputfile.split('/')[-1].split('.')[0],simlibfile, #+'_ia'
 			expadj,expadj,expadj,expadj,filtstr,surveyarea),file=fout)
 		if simperfect:
 			print('GENPERFECT: 1',file=fout)
@@ -582,11 +581,13 @@ GENVERSION: %s		   # simname
 GENSOURCE:	RANDOM	 
 GENMODEL:	SALT2.Guy10_UV2IR
 GENPREEFIX: YSE_IA
+NGEN_LC: 1000
 
 SIMLIB_FILE: %s # simlib file
 
 CIDOFF: 500
-KCOR_FILE:	$PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
+#KCOR_FILE: $PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
+KCOR_FILE: /Users/David/Dropbox/research/YSE_SIM/analysis/kcor_PS1_ZTF_none.fits
 APPLY_SEARCHEFF_OPT: 0
 
 EXPOSURE_TIME_FILTER: g %.1f
@@ -607,7 +608,7 @@ SOLID_ANGLE(NORMAL+ONEDAY): %.3f # 0.148 # 1 field, 7 sq degreees *7
 SEARCHEFF_PIPELINE_FILE:  SEARCHEFF_PIPELINE_YSE.DAT
 SEARCHEFF_PIPELINE_LOGIC_FILE:	SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
 
-GENRANGE_REDSHIFT:	0.001	 0.5
+GENRANGE_REDSHIFT:	0.005	 0.5
 GENSIGMA_REDSHIFT:	0.000001
 GENRANGE_TREST:	  -100.0	80.0	 # rest epoch relative to peak (days)
 
@@ -628,7 +629,7 @@ CUTWIN_TRESTMIN: -20  10
 CUTWIN_TRESTMAX:   9  40
 CUTWIN_MWEBV:	   0 .20
 
-FORMAT_MASK:  2 # terse format
+FORMAT_MASK:  32
 CUTWIN_SNRMAX:	 5.0 grizXY 2 -20. 80.	# require 1 of griz with S/N > 5
 
 GENMEAN_SALT2x1:	 0.703
@@ -827,25 +828,35 @@ SKYSIG_UNIT:	ADU_PER_SQARCSEC
 # Assume SKYMAG(  8679.) = 18.10 mag/asec^2
 # Assume SKYMAG( 10095.) = 17.90 mag/asec^2
 
-FLUXERR_COR:  grizXY  -0.90		 4.7703	 1.0526	 1.0000	 0.8650	 4.7703	 1.0526
-FLUXERR_COR:  grizXY  -0.70		 5.3170	 1.0000	 1.0000	 1.3651	 5.3170	 1.0000
-FLUXERR_COR:  grizXY  -0.50		 2.3181	 1.7215	 1.3091	 0.7351	 2.3181	 1.7215
-FLUXERR_COR:  grizXY  -0.30		 3.3645	 1.8474	 1.1026	 0.7446	 3.3645	 1.8474
-FLUXERR_COR:  grizXY  -0.10		 3.1311	 2.0894	 1.0315	 1.0230	 3.1311	 2.0894
-FLUXERR_COR:  grizXY   0.10		 3.3423	 2.1468	 1.6439	 1.0871	 3.3423	 2.1468
-FLUXERR_COR:  grizXY   0.30		 3.0158	 2.8774	 1.2655	 1.1967	 3.0158	 2.8774
-FLUXERR_COR:  grizXY   0.50		 3.1574	 2.2492	 2.1569	 1.2198	 3.1574	 2.2492
-FLUXERR_COR:  grizXY   0.70		 2.3857	 2.4199	 1.5264	 1.2647	 2.3857	 2.4199
-FLUXERR_COR:  grizXY   0.90		 2.2685	 2.1145	 1.4510	 1.2045	 2.2685	 2.1145
-FLUXERR_COR:  grizXY   1.10		 2.0670	 1.8696	 1.3235	 1.0674	 2.0670	 1.8696
-FLUXERR_COR:  grizXY   1.30		 1.8561	 1.7418	 1.1890	 1.1428	 1.8561	 1.7418
-FLUXERR_COR:  grizXY   1.50		 1.4960	 1.4025	 1.1767	 1.0346	 1.4960	 1.4025
-FLUXERR_COR:  grizXY   1.70		 1.4736	 1.2986	 1.0032	 1.2882	 1.4736	 1.2986
-FLUXERR_COR:  grizXY   1.90		 1.1383	 1.1056	 1.0742	 1.0000	 1.1383	 1.1056
-FLUXERR_COR:  grizXY   2.10		 1.6320	 1.0000	 1.0000	 1.0000	 1.6320	 1.0000
-FLUXERR_COR:  grizXY   2.30		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
-FLUXERR_COR:  grizXY   2.50		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
-FLUXERR_COR:  grizXY   2.70		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
+FLUXERR_COR: XYgriz -0.90 2.6708 1.9649 2.5373 1.8667 1.9486 1.0957
+FLUXERR_COR: XYgriz -0.48 3.4204 2.2901 3.2494 2.1756 2.3005 1.2364
+FLUXERR_COR: XYgriz -0.06 3.7884 2.5821 3.5990 2.4530 2.5564 1.2882
+FLUXERR_COR: XYgriz  0.37 3.3087 3.0493 3.1433 2.8968 2.8876 1.3509
+FLUXERR_COR: XYgriz  0.79 2.6774 2.3056 2.5435 2.1903 2.3163 1.3317
+FLUXERR_COR: XYgriz  1.21 2.0638 1.8177 1.9606 1.7268 1.8920 1.3963
+FLUXERR_COR: XYgriz  1.63 1.5051 1.5201 1.4298 1.4441 1.4120 1.3013
+FLUXERR_COR: XYgriz  2.06 1.0000 1.0000 0.9500 0.9500 1.0500 1.0000
+FLUXERR_COR: XYgriz  2.48 1.0000 1.0000 0.9500 0.9500 1.0500 1.0000
+
+#FLUXERR_COR:  grizXY  -0.90		 4.7703	 1.0526	 1.0000	 0.8650	 4.7703	 1.0526
+#FLUXERR_COR:  grizXY  -0.70		 5.3170	 1.0000	 1.0000	 1.3651	 5.3170	 1.0000
+#FLUXERR_COR:  grizXY  -0.50		 2.3181	 1.7215	 1.3091	 0.7351	 2.3181	 1.7215
+#FLUXERR_COR:  grizXY  -0.30		 3.3645	 1.8474	 1.1026	 0.7446	 3.3645	 1.8474
+#FLUXERR_COR:  grizXY  -0.10		 3.1311	 2.0894	 1.0315	 1.0230	 3.1311	 2.0894
+#FLUXERR_COR:  grizXY   0.10		 3.3423	 2.1468	 1.6439	 1.0871	 3.3423	 2.1468
+#FLUXERR_COR:  grizXY   0.30		 3.0158	 2.8774	 1.2655	 1.1967	 3.0158	 2.8774
+#FLUXERR_COR:  grizXY   0.50		 3.1574	 2.2492	 2.1569	 1.2198	 3.1574	 2.2492
+#FLUXERR_COR:  grizXY   0.70		 2.3857	 2.4199	 1.5264	 1.2647	 2.3857	 2.4199
+#FLUXERR_COR:  grizXY   0.90		 2.2685	 2.1145	 1.4510	 1.2045	 2.2685	 2.1145
+#FLUXERR_COR:  grizXY   1.10		 2.0670	 1.8696	 1.3235	 1.0674	 2.0670	 1.8696
+#FLUXERR_COR:  grizXY   1.30		 1.8561	 1.7418	 1.1890	 1.1428	 1.8561	 1.7418
+#FLUXERR_COR:  grizXY   1.50		 1.4960	 1.4025	 1.1767	 1.0346	 1.4960	 1.4025
+#FLUXERR_COR:  grizXY   1.70		 1.4736	 1.2986	 1.0032	 1.2882	 1.4736	 1.2986
+#FLUXERR_COR:  grizXY   1.90		 1.1383	 1.1056	 1.0742	 1.0000	 1.1383	 1.1056
+#FLUXERR_COR:  grizXY   2.10		 1.6320	 1.0000	 1.0000	 1.0000	 1.6320	 1.0000
+#FLUXERR_COR:  grizXY   2.30		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
+#FLUXERR_COR:  grizXY   2.50		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
+#FLUXERR_COR:  grizXY   2.70		 1.0000	 1.0000	 1.0000	 1.0000	 1.0000	 1.0000
 
 BEGIN LIBGEN
 
@@ -1064,7 +1075,7 @@ if __name__ == "__main__":
 			for k in datadict.keys():
 				fulldatadict[k] = datadict[k]
 			os.system('cp $SCRATCH_SIMDIR/%s_%s/%s_%s.DUMP dump/'%(genversion,versionsuffix,genversion,versionsuffix))
-			os.system('cat $SCRATCH_SIMDIR/SIM/%s_%s/%s_%s.DUMP >> dump/%s_PLASTICC.dump'%(genversion,versionsuffix,genversion,versionsuffix,genversion))
+			os.system('cat $SCRATCH_SIMDIR/%s_%s/%s_%s.DUMP >> dump/%s_PLASTICC.dump'%(genversion,versionsuffix,genversion,versionsuffix,genversion))
 
 		save_compressed(fulldatadict, '%s_PLASTICC.pkl.gz'%genversion)
 		
