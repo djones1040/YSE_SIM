@@ -165,9 +165,9 @@ class mkSimlibs:
 		if not rcadence: rcadence = 999999
 		if not icadence: icadence = 999999
 		if not zcadence: zcadence = 999999
-		if not gonedaycadence: ronedaycadence = 999999
+		if not gonedaycadence: gonedaycadence = 999999
 		if not ronedaycadence: ronedaycadence = 999999
-		if not ionedaycadence: zonedaycadence = 999999
+		if not ionedaycadence: ionedaycadence = 999999
 		if not zonedaycadence: zonedaycadence = 999999
 		
 		# ZTF is 3 hours earlier
@@ -435,6 +435,7 @@ END_LIBID:		1
 
 						count += 1
 						ps1count += 1
+
 
 				if not nightcount % gonedaycadence - gonedayoffset or not nightcount % ronedaycadence - ronedayoffset or not \
 				   nightcount % ionedaycadence - ionedayoffset or not nightcount % zonedaycadence - zonedayoffset:
