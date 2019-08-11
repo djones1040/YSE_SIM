@@ -39,7 +39,7 @@ def parse_phot_table(table, rows, filters=None):
 		data[filt]['fluxcalerr'].append(row['FLUXCALERR'])
 		data[filt]['photflag'].append(row['PHOTFLAG'])
 #		data[filt]['snrmag20'].append(row['SIM_SNRMAG20'])
-	data['field'] = row['FIELD']
+	data['field'] = row['FIELD'].replace(' ','')
 	return data
 
 
