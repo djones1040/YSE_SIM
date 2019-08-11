@@ -161,6 +161,11 @@ class mkSimlibs:
 		glines,rlines,ilines,zlines = getlines()
 		mjd_goodweather = np.loadtxt('weather/yse_goodweather.list',unpack=True)
 
+		if not gcadence: gcadence = 999999; if not rcadence: rcadence = 999999
+		if not icadence: icadence = 999999; if not zcadence: zcadence = 999999
+		if not gonedaycadence: ronedaycadence = 999999; if not ronedaycadence: ronedaycadence = 999999
+		if not ionedaycadence: zonedaycadence = 999999; if not zonedaycadence: zonedaycadence = 999999
+		
 		# ZTF is 3 hours earlier
 		#ztf_offset = -0.125
 
