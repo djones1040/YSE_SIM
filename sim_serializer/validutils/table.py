@@ -39,7 +39,7 @@ def parse_phot_table(table, rows, filters=None):
 		data[filt]['fluxcalerr'].append(row['FLUXCALERR'])
 		data[filt]['photflag'].append(row['PHOTFLAG'])
 #		data[filt]['snrmag20'].append(row['SIM_SNRMAG20'])
-		
+	data['field'] = row['FIELD']
 	return data
 
 
@@ -76,7 +76,7 @@ def parse_header_table(table, index=0, filters=None):
 	header['type'] = head['SIM_TYPE_INDEX']
 	# Peak MJD
 	header['pkmjd'] = head['SIM_PEAKMJD']
-
+	
 	# Peak magnitudes
 	for filt in filters:
 		header['pkmag_%s' % filt] = head['SIM_PEAKMAG_%s' % filt]
@@ -156,5 +156,6 @@ def parse_model(dirpath,filters=None):
 			data['header'] = header
 			# Use the SN id to index the dictionary
 			datadict[header['snid']] = data
-
+			data['header']['field'] = data['field']
+			
 	return datadict

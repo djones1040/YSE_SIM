@@ -78,6 +78,18 @@ class mkSimlibs:
 			'-z','--zcadence', default=3,type="float",
 			help='cadence in z (default=%default)')
 		parser.add_option(
+			'--gonedaycadence', default=0,type="float",
+			help='one-day cadence in g (default=%default)')
+		parser.add_option(
+			'--ronedaycadence', default=0,type="float",
+			help='one-day cadence in r (default=%default)')
+		parser.add_option(
+			'--ionedaycadence', default=0,type="float",
+			help='one-day cadence in i (default=%default)')
+		parser.add_option(
+			'--zonedaycadence', default=0,type="float",
+			help='one-day cadence in z (default=%default)')
+		parser.add_option(
 			'--goffset', default=0,type="float",
 			help='cadence offset in g (default=%default)')
 		parser.add_option(
@@ -89,6 +101,18 @@ class mkSimlibs:
 		parser.add_option(
 			'--zoffset', default=0,type="float",
 			help='cadence offset in z (default=%default)')
+		parser.add_option(
+			'--gonedayoffset', default=0,type="float",
+			help='one-day survey cadence offset in g (default=%default)')
+		parser.add_option(
+			'--ronedayoffset', default=0,type="float",
+			help='one-day survey cadence offset in r (default=%default)')
+		parser.add_option(
+			'--ionedayoffset', default=0,type="float",
+			help='one-day survey cadence offset in i (default=%default)')
+		parser.add_option(
+			'--zonedayoffset', default=0,type="float",
+			help='one-day survey cadence offset in z (default=%default)')
 		parser.add_option(
 			'--ztfoffset', default=-0.125,type="float",
 			help='cadence offset for ZTF (default=%default)')
@@ -129,6 +153,8 @@ class mkSimlibs:
 	
 	def mksimlib(self,gcadence,rcadence,icadence,zcadence,
 				 goffset,roffset,ioffset,zoffset,
+				 gonedaycadence,ronedaycadence,ionedaycadence,zonedaycadence,
+				 gonedayoffset,ronedayoffset,ionedayoffset,zonedayoffset,
 				 simlibfile,simperfect=False,ztfsim=True,
 				 ztf_offset=None,onedayfrac=0,exptime=15):
 		# 3 day cadence, gr gi gz
@@ -192,7 +218,7 @@ class mkSimlibs:
 			randval = random.uniform(0, 1)
 			if randval > haleakaladict[mjd_to_month(m)] or simperfect:
 				iLine = random.sample(range(len(glines)),1)[0]
-				if (not (nightcount - goffset) % gcadence and nightcount - goffset >= 0) or simperfect:
+				if gcadence and (not (nightcount - goffset) % gcadence and nightcount - goffset >= 0) or simperfect:
 					for lines in [glines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -207,7 +233,7 @@ class mkSimlibs:
 						
 						count += 1
 						ps1count += 1
-				if (not (nightcount - roffset) % rcadence and nightcount - roffset >= 0) or simperfect:
+				if rcadence and (not (nightcount - roffset) % rcadence and nightcount - roffset >= 0) or simperfect:
 					for lines in [rlines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -222,7 +248,7 @@ class mkSimlibs:
 						
 						count += 1
 						ps1count += 1
-				if (not (nightcount - ioffset) % icadence and nightcount - ioffset >= 0) or simperfect:
+				if icadence and (not (nightcount - ioffset) % icadence and nightcount - ioffset >= 0) or simperfect:
 					for lines in [ilines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -238,7 +264,7 @@ class mkSimlibs:
 
 						count += 1
 						ps1count += 1
-				if (not (nightcount - zoffset) % zcadence and nightcount - zoffset >= 0) or simperfect:
+				if zcadence and (not (nightcount - zoffset) % zcadence and nightcount - zoffset >= 0) or simperfect:
 					for lines in [zlines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -341,7 +367,7 @@ END_LIBID:		1
 			randval = random.uniform(0, 1)
 			if randval > haleakaladict[mjd_to_month(m)] or simperfect:
 				iLine = random.sample(range(len(glines)),1)[0]
-				if (not (nightcount - goffset/3)%(gcadence/3) and nightcount - goffset/3 >= 0) or simperfect:
+				if gonedaycadence and (not (nightcount - gonedayoffset)%(gonedaycadence) and nightcount - gonedayoffset >= 0) or simperfect:
 					for lines in [glines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -356,7 +382,7 @@ END_LIBID:		1
 						
 						count += 1
 						ps1count += 1
-				if (not (nightcount - roffset/3)%(rcadence/3) and nightcount - roffset/3 >= 0) or simperfect:
+				if ronedaycadence and (not (nightcount - ronedayoffset)%(ronedaycadence) and nightcount - ronedayoffset >= 0) or simperfect:
 					for lines in [rlines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -371,7 +397,7 @@ END_LIBID:		1
 
 						count += 1
 						ps1count += 1
-				if (not (nightcount - ioffset/3)%(icadence/3) and nightcount - ioffset/3 >= 0) or simperfect:
+				if ionedaycadence and (not (nightcount - ionedayoffset)%(ionedaycadence) and nightcount - ionedayoffset >= 0) or simperfect:
 					for lines in [ilines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -386,7 +412,7 @@ END_LIBID:		1
 
 						count += 1
 						ps1count += 1
-				if (not (nightcount - zoffset/3)%(zcadence/3) and nightcount - zoffset/3 >= 0) or simperfect:
+				if zonedaycadence and (not (nightcount - zonedayoffset)%(zonedaycadence) and nightcount - zonedayoffset >= 0) or simperfect:
 					for lines in [zlines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -401,8 +427,8 @@ END_LIBID:		1
 						count += 1
 						ps1count += 1
 
-				if not nightcount % gcadence - goffset or not nightcount % rcadence - roffset or not \
-				   nightcount % icadence - ioffset or not nightcount % zcadence - zoffset:
+				if not nightcount % gonedaycadence - gonedayoffset or not nightcount % ronedaycadence - ronedayoffset or not \
+				   nightcount % ionedaycadence - ionedayoffset or not nightcount % zonedaycadence - zonedayoffset:
 					usednightcount += 1
 			
 			if ztf_offset > 0:
@@ -834,15 +860,27 @@ SKYSIG_UNIT:	ADU_PER_SQARCSEC
 # Assume SKYMAG(  8679.) = 18.10 mag/asec^2
 # Assume SKYMAG( 10095.) = 17.90 mag/asec^2
 
-FLUXERR_COR: XYgriz -0.90 2.6708 1.9649 2.5373 1.8667 1.9486 1.0957
-FLUXERR_COR: XYgriz -0.48 3.4204 2.2901 3.2494 2.1756 2.3005 1.2364
-FLUXERR_COR: XYgriz -0.06 3.7884 2.5821 3.5990 2.4530 2.5564 1.2882
-FLUXERR_COR: XYgriz  0.37 3.3087 3.0493 3.1433 2.8968 2.8876 1.3509
-FLUXERR_COR: XYgriz  0.79 2.6774 2.3056 2.5435 2.1903 2.3163 1.3317
-FLUXERR_COR: XYgriz  1.21 2.0638 1.8177 1.9606 1.7268 1.8920 1.3963
-FLUXERR_COR: XYgriz  1.63 1.5051 1.5201 1.4298 1.4441 1.4120 1.3013
-FLUXERR_COR: XYgriz  2.06 1.0000 1.0000 0.9500 0.9500 1.0500 1.0000
-FLUXERR_COR: XYgriz  2.48 1.0000 1.0000 0.9500 0.9500 1.0500 1.0000
+#FLUXERR_COR: XYgriz -0.90 2.6708 1.9649 2.5373 1.8667 1.9486 1.0957
+#FLUXERR_COR: XYgriz -0.48 3.4204 2.2901 3.2494 2.1756 2.3005 1.2364
+#FLUXERR_COR: XYgriz -0.06 3.7884 2.5821 3.5990 2.4530 2.5564 1.2882
+#FLUXERR_COR: XYgriz  0.37 3.3087 3.0493 3.1433 2.8968 2.8876 1.3509
+#FLUXERR_COR: XYgriz  0.79 2.6774 2.3056 2.5435 2.1903 2.3163 1.3317
+#FLUXERR_COR: XYgriz  1.21 2.0638 1.8177 1.9606 1.7268 1.8920 1.3963
+#FLUXERR_COR: XYgriz  1.63 1.5051 1.5201 1.4298 1.4441 1.4120 1.3013
+#FLUXERR_COR: XYgriz  2.06 1.0000 1.0000 0.9500 0.9500 1.0500 1.0000
+#FLUXERR_COR: XYgriz  2.48 1.0000 1.0000 0.9500 0.9500 1.0500 1.0000
+
+# ZTF errors g scaled up by 20%, r errors by 40%
+FLUXERR_COR: XYgriz -0.90 3.20496 2.75086 2.5373 1.8667 1.9486 1.0957
+FLUXERR_COR: XYgriz -0.48 4.10448 3.20614 3.2494 2.1756 2.3005 1.2364
+FLUXERR_COR: XYgriz -0.06 4.54608 3.61494 3.5990 2.4530 2.5564 1.2882
+FLUXERR_COR: XYgriz  0.37 3.97044 4.26902 3.1433 2.8968 2.8876 1.3509
+FLUXERR_COR: XYgriz  0.79 3.21288 3.22784 2.5435 2.1903 2.3163 1.3317
+FLUXERR_COR: XYgriz  1.21 2.47656 2.54478 1.9606 1.7268 1.8920 1.3963
+FLUXERR_COR: XYgriz  1.63 1.80612 2.12814 1.4298 1.4441 1.4120 1.3013
+FLUXERR_COR: XYgriz  2.06 1.20000 1.40000 0.9500 0.9500 1.0500 1.0000
+FLUXERR_COR: XYgriz  2.48 1.20000 1.40000 0.9500 0.9500 1.0500 1.0000
+
 
 BEGIN LIBGEN
 
@@ -1018,9 +1056,21 @@ if __name__ == "__main__":
 	options,  args = parser.parse_args()
 
 	if not options.sim or not options.fit:
+		#if not options.gonedaycadence: options.gonedaycadence = options.gcadence/3
+		#if not options.ronedaycadence: options.ronedaycadence = options.rcadence/3
+		#if not options.ionedaycadence: options.ionedaycadence = options.icadence/3
+		#if not options.zonedaycadence: options.zonedaycadence = options.zcadence/3
+		#if not options.gonedayoffset: options.gonedayoffset = options.goffset/3
+		#if not options.ronedayoffset: options.ronedayoffset = options.roffset/3
+		#if not options.ionedayoffset: options.ionedayoffset = options.ioffset/3
+		#if not options.zonedayoffset: options.zonedayoffset = options.zoffset/3
+		
 		surveyarea,surveyarea_oneday = mks.mksimlib(options.gcadence,options.rcadence,options.icadence,
 													options.zcadence,options.goffset,options.roffset,
 													options.ioffset,options.zoffset,
+													options.gonedaycadence,options.ronedaycadence,options.ionedaycadence,
+													options.zonedaycadence,options.gonedayoffset,options.ronedayoffset,
+													options.ionedayoffset,options.zonedayoffset,
 													options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
 													simperfect=options.perfect,
 													ztf_offset=options.ztfoffset,
