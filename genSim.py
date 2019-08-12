@@ -182,6 +182,7 @@ class mkSimlibs:
 
 		if not simperfect:
 			mjd = np.arange(58240,59517,1)
+			#mjd = np.arange(58240,58970,1)
 		else:
 			mjd = np.arange(58240,58440,1)
 			#mjd = np.arange(58240,59000,1)
@@ -626,8 +627,8 @@ NGEN_LC: 1000
 SIMLIB_FILE: %s # simlib file
 
 CIDOFF: 500
-#KCOR_FILE: $PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
-KCOR_FILE: /Users/David/Dropbox/research/YSE_SIM/analysis/kcor_PS1_ZTF_none.fits
+KCOR_FILE: $PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits
+#KCOR_FILE: /Users/David/Dropbox/research/YSE_SIM/analysis/kcor_PS1_ZTF_none.fits
 APPLY_SEARCHEFF_OPT: 0
 
 EXPOSURE_TIME_FILTER: g %.1f
@@ -650,7 +651,7 @@ SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
 SEARCHEFF_PIPELINE_FILE:  SEARCHEFF_PIPELINE_YSE.DAT
 SEARCHEFF_PIPELINE_LOGIC_FILE:	SEARCHEFF_PIPELINE_LOGIC_YSE.DAT
 
-GENRANGE_REDSHIFT:	0.005	 0.5
+GENRANGE_REDSHIFT:	0.001	 0.5
 GENSIGMA_REDSHIFT:	0.000001
 GENRANGE_TREST:	  -100.0	80.0	 # rest epoch relative to peak (days)
 
@@ -932,6 +933,7 @@ GENOPT(NON1A): INPUT_FILE_INCLUDE LFs/SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
 ENDLIST_GENVERSION:
 
 NGEN_UNIT:	0.014  SEASONS
+# 0.014 SEASONS
 # 0.286 seasons (1 year)/20 jobs
 
 # specify sim-input files for snlc_sim.exe
@@ -985,10 +987,10 @@ GENOPT: GENTYPE 52
 GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 
 # Superluminous SN:	 SLSN-I
-GENVERSION:	 %s_PLASTICC_MODEL95_SLSN-I
-GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_SLSN-I-MOSFIT.INPUT
-GENOPT: GENTYPE 95
-GENOPT: SEARCHEFF_SPEC_SCALE 1.0
+#GENVERSION:	 %s_PLASTICC_MODEL95_SLSN-I
+#GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_SLSN-I-MOSFIT.INPUT
+#GENOPT: GENTYPE 95
+#GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 
 # pair instability SN: PISN
 #GENVERSION:  %s_PLASTICC_MODEL99_PISN
@@ -1094,8 +1096,8 @@ if __name__ == "__main__":
 								 surveyarea,surveyarea_oneday,simperfect=options.perfect,batchtmpl=options.batchtmpl,exptime=options.exptime)
 	
 	if options.sim:
-		#os.system('rm -r SIMLOGS_%s'%genversion)
-		#os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
+		os.system('rm -r SIMLOGS_%s'%genversion)
+		os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
 
 		# check for job completion
 		print('waiting for job to finish...')
