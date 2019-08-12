@@ -181,8 +181,8 @@ class mkSimlibs:
 			return date.split('-')[1]
 
 		if not simperfect:
-			mjd = np.arange(58240,59517,1)
-			#mjd = np.arange(58240,58970,1)
+			#mjd = np.arange(58240,59517,1)
+			mjd = np.arange(58240,58605,1)
 		else:
 			mjd = np.arange(58240,58440,1)
 			#mjd = np.arange(58240,59000,1)
@@ -932,7 +932,7 @@ GENOPT(NON1A): INPUT_FILE_INCLUDE LFs/SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
 
 ENDLIST_GENVERSION:
 
-NGEN_UNIT:	0.014  SEASONS
+NGEN_UNIT:	0.05  SEASONS
 # 0.014 SEASONS
 # 0.286 seasons (1 year)/20 jobs
 
