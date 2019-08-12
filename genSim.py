@@ -321,7 +321,8 @@ class mkSimlibs:
 		print(simlibheader,file=fout)
 		fout.close()
 
-		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)
+		# ps1count/usednightcount is # of filters
+		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)*3 #/2. # factor of 2 hack?
 		nfields = int(surveyarea/(7*(np.pi/180.)**2.))
 
 		fout = open(simlibfile,'a')
@@ -337,7 +338,7 @@ END_LIBID:		1
 
 		""",file=fout)
 		fout.close()
-		
+
 		# one-day survey
 		count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
 		simliblines_oneday = []
@@ -466,7 +467,7 @@ END_LIBID:		1
 							count += 2
 		
 		if usednightcount > 0:
-			surveyarea_oneday = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*onedayfrac
+			surveyarea_oneday = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*onedayfrac #/2. # factor of 2 hack?
 			nfields_oneday = surveyarea_oneday/(7*(np.pi/180.)**2.)
 		else:
 			surveyarea_oneday = 0
@@ -489,8 +490,7 @@ END_LIBID:		2
 		#surveyarea = 2.*3600./20*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
 
 		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
-		
-		return surveyarea/(1-onedayfrac),surveyarea/(1-onedayfrac)
+		return surveyarea+surveyarea_oneday, 0 #/(1-onedayfrac),surveyarea/(1-onedayfrac)
 	
 		
 	def mkinput(self,gcadence,rcadence,icadence,zcadence,inputfile,simlibfile,
