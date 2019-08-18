@@ -322,7 +322,7 @@ class mkSimlibs:
 		fout.close()
 
 		# ps1count/usednightcount is # of filters
-		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)*3 #/2. # factor of 2 hack?
+		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)*3
 		nfields = int(surveyarea/(7*(np.pi/180.)**2.))
 
 		fout = open(simlibfile,'a')
@@ -467,7 +467,7 @@ END_LIBID:		1
 							count += 2
 		
 		if usednightcount > 0:
-			surveyarea_oneday = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*onedayfrac #/2. # factor of 2 hack?
+			surveyarea_oneday = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*onedayfrac
 			nfields_oneday = surveyarea_oneday/(7*(np.pi/180.)**2.)
 		else:
 			surveyarea_oneday = 0
@@ -937,7 +937,7 @@ NGEN_UNIT:	0.05  SEASONS
 # 0.286 seasons (1 year)/20 jobs
 
 # specify sim-input files for snlc_sim.exe
-SIMGEN_INFILE_Ia: %s
+#SIMGEN_INFILE_Ia: %s
 SIMGEN_INFILE_NONIa: %s
 
 # define required global items to ensure uniformity among all jobs
