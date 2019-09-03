@@ -199,7 +199,7 @@ class mkSimlibs:
 
 		if not simperfect:
 			mjd = np.arange(58240,59517,1)
-			#mjd = np.arange(58240,58970,1)
+			#mjd = np.arange(58240,58605,1)
 		else:
 			mjd = np.arange(58240,58440,1)
 			#mjd = np.arange(58240,59000,1)
