@@ -184,7 +184,7 @@ class mkSimlibs:
 			mjd = np.arange(58240,59517,1)
 			#mjd = np.arange(58240,58605,1)
 		else:
-			mjd = np.arange(58240,58440,1)
+			mjd = np.arange(58240,58380,0.33)
 			#mjd = np.arange(58240,59000,1)
 
 		# mag lims with moon phase from Sofie
@@ -642,7 +642,7 @@ GENFILTERS:		  %s
 
 GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
-GENRANGE_PEAKMJD:  58240  59617
+GENRANGE_PEAKMJD:  58240  59517
 GENRANGE_RA: -999 +999
 GENRANGE_DECL: -999 +999
 SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
@@ -702,6 +702,7 @@ GENVERSION: %s		   # simname
 GENSOURCE:	RANDOM	 
 GENMODEL:	NON1A
 GENPREEFIX: YSE_IA
+NGEN_LC: 100
 
 SIMLIB_FILE: %s # simlib file
 
@@ -723,7 +724,7 @@ GENFILTERS:		  %s
 
 GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
-GENRANGE_PEAKMJD:  58240  59617
+GENRANGE_PEAKMJD:  58240  59517
 GENRANGE_RA: -999 +999
 GENRANGE_DECL: -999 +999
 SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
@@ -783,6 +784,7 @@ GENVERSION: %s		   # simname
 GENSOURCE:	RANDOM	 
 GENMODEL:	NON1A
 GENPREEFIX: YSE_IA
+NGEN_LC: 100
 
 SIMLIB_FILE: %s # simlib file
 
@@ -804,7 +806,7 @@ GENFILTERS:		  %s
 
 GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
-GENRANGE_PEAKMJD:  58240  59617
+GENRANGE_PEAKMJD:  58240  59517
 GENRANGE_RA: -999 +999
 GENRANGE_DECL: -999 +999
 SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
@@ -932,7 +934,7 @@ GENOPT(NON1A): INPUT_FILE_INCLUDE LFs/SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
 
 ENDLIST_GENVERSION:
 
-NGEN_UNIT:	0.014  SEASONS
+NGEN_UNIT:	0.286  SEASONS
 # 0.014 SEASONS
 # 0.286 seasons (1 year)/20 jobs
 
@@ -948,25 +950,6 @@ FORMAT_MASK: 48			  # 2=TERSE	   16=RanCID  32=FITS-FORMAT
 RESET_CIDOFF: 2
 PATH_SNDATA_SIM:  $SCRATCH_SIMDIR
 
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
 RANSEED: 12349
 
 """
@@ -1096,15 +1079,15 @@ if __name__ == "__main__":
 								 surveyarea,surveyarea_oneday,simperfect=options.perfect,batchtmpl=options.batchtmpl,exptime=options.exptime)
 	
 	if options.sim:
-		os.system('rm -r SIMLOGS_%s'%genversion)
-		os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
+		#os.system('rm -r SIMLOGS_%s'%genversion)
+		#os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
 
 		# check for job completion
 		print('waiting for job to finish...')
 		job_complete=False
 		while not job_complete:
 			time.sleep(15)
-			simtext = os.popen('squeue --user=djones1741 --format="%.30j"').read()
+			simtext = os.popen('squeue --user=djones1741 --format="%.50j"').read()
 
 			job_complete = True
 			for line in simtext.split('\n'):
@@ -1119,9 +1102,9 @@ if __name__ == "__main__":
 		fulldatadict = {}
 		for versionsuffix in ['PLASTICC_MODEL67_SNIa-91bg','PLASTICC_MODEL52_SNIax','PLASTICC_MODEL95_SLSN-I',
 							  'PLASTICC_MODEL99_ILOT','PLASTICC_MODEL99_CART','PLASTICC_MODEL42_SNIIn',
-							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL62_SNIbc-Templates',
+							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL62_SNIbc-MOSFIT',
 							  'PLASTICC_MODEL42_SNII-NMF','PLASTICC_MODEL42_SNII-Templates',
-							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL90_SNIa-SALT2']:
+							  'PLASTICC_MODEL90_SNIa-SALT2']:
 			try:
 				datadict = serialize.main('%s_%s'%(genversion,versionsuffix),verbose=True,save=False,
 										  filters='grizXY',dirpath='$SCRATCH_SIMDIR')
