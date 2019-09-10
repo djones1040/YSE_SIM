@@ -41,6 +41,13 @@ haleakaladict = {'01':0.323,'02':0.357,'03':0.355,'04':0.333,'05':0.355,'06':0.2
 palomardict = {'01':0.452,'02':0.607,'03':0.452,'04':0.300,'05':0.161,'06':0.067,
 			   '07':0.097,'08':0.161,'09':0.167,'10':0.226,'11':0.300,'12':0.387}
 
+#print('hack!')
+#haleakaladict = {'01':0.0,'02':0.0,'03':0.0,'04':0.0,'05':0.0,'06':0.0,
+#				 '07':0.0,'08':0.0,'09':0.0,'10':0.0,'11':0.0,'12':0.0}
+#palomardict = {'01':0.0,'02':0.0,'03':0.0,'04':0.0,'05':0.0,'06':0.0,
+#			   '07':0.0,'08':0.0,'09':0.0,'10':0.0,'11':0.0,'12':0.0}
+
+
 def mkGoodWeatherList(simlibfile = 'PS1MD.simlib',
 					  obslistfile='weather/yse_goodweather.list'):
 
@@ -131,8 +138,8 @@ class mkSimlibs:
 			'--customonedaybright', default=None,type="string",
 			help='custom survey (default=%default)')
 		parser.add_option(
-			'--surveycadence', default=3.0,type="float",
-			help='cadence, used for custom survey (default=%default)')
+			'--surveycadence', default='3',type="string",
+			help='cadence, used for custom survey.  Can be comma-separated to alternate (default=%default)')
 		parser.add_option(
 			'--exptime', default=15,type="float",
 			help='exposure time in seconds (default=%default)')
@@ -511,59 +518,68 @@ END_LIBID:		2
 
 	def get_cadences(self,customdark,custombright,customonedark,customonebright,surveycadence):
 
-		# parse the custom strings
-		# customdark = gr,gi,gz
-		# custombright = ri,rz
-		filtdarkepochs = customdark.split(',')
-		gcount,rcount,icount,zcount = 0,0,0,0
-		self.gdarkoffset,self.rdarkoffset,self.idarkoffset,self.zdarkoffset = None,None,None,None
-		for i,fe in enumerate(filtdarkepochs):
-			if 'g' in fe:
-				gcount += 1
-				if self.gdarkoffset is None: self.gdarkoffset = i*surveycadence
-			if 'r' in fe:
-				rcount += 1
-				if self.rdarkoffset is None: self.rdarkoffset = i*surveycadence
-			if 'i' in fe:
-				icount += 1
-				if self.idarkoffset is None: self.idarkoffset = i*surveycadence
-			if 'z' in fe:
-				zcount += 1
-				if self.zdarkoffset is None: self.zdarkoffset = i*surveycadence
-		if gcount != 0: self.gdarkcadence = len(filtdarkepochs)/gcount*surveycadence
-		else: self.gdarkoffset = 99999; self.gdarkcadence = 99999
-		if rcount != 0: self.rdarkcadence = len(filtdarkepochs)/rcount*surveycadence
-		else: self.rdarkoffset = 99999; self.rdarkcadence = 99999
-		if icount != 0: self.idarkcadence = len(filtdarkepochs)/icount*surveycadence
-		else: self.idarkoffset = 99999; self.idarkcadence = 99999
-		if zcount != 0: self.zdarkcadence = len(filtdarkepochs)/zcount*surveycadence
-		else: self.zdarkoffset = 99999; self.zdarkcadence = 99999
+		surveycadence = np.array(surveycadence.split(',')).astype('float')
+		self.gdarkcadence,self.rdarkcadence,self.idarkcadence,self.zdarkcadence = [],[],[],[]
+		self.gdarkoffset,self.rdarkoffset,self.idarkoffset,self.zdarkoffset = \
+			[None]*len(surveycadence),[None]*len(surveycadence),[None]*len(surveycadence),[None]*len(surveycadence)
+		self.gbrightcadence,self.rbrightcadence,self.ibrightcadence,self.zbrightcadence = [],[],[],[]
+		self.gbrightoffset,self.rbrightoffset,self.ibrightoffset,self.zbrightoffset = \
+			[None]*len(surveycadence),[None]*len(surveycadence),[None]*len(surveycadence),[None]*len(surveycadence)
 
-		filtbrightepochs = custombright.split(',')
-		gcount,rcount,icount,zcount = 0,0,0,0
-		self.gbrightoffset,self.rbrightoffset,self.ibrightoffset,self.zbrightoffset = None,None,None,None
-		for i,fe in enumerate(filtbrightepochs):
-			if 'g' in fe:
-				gcount += 1
-				if self.gbrightoffset is None: self.gbrightoffset = i*surveycadence
-			if 'r' in fe:
-				rcount += 1
-				if self.rbrightoffset is None: self.rbrightoffset = i*surveycadence
-			if 'i' in fe:
-				icount += 1
-				if self.ibrightoffset is None: self.ibrightoffset = i*surveycadence
-			if 'z' in fe:
-				zcount += 1
-				if self.zbrightoffset is None: self.zbrightoffset = i*surveycadence
+		
+		for j in range(len(surveycadence)):
+			# parse the custom strings
+			# customdark = gr,gi,gz
+			# custombright = ri,rz
+			filtdarkepochs = customdark.split(',')
+			gcount,rcount,icount,zcount = 0,0,0,0
+			#self.gdarkoffset,self.rdarkoffset,self.idarkoffset,self.zdarkoffset = None,None,None,None
+			for i,fe in enumerate(filtdarkepochs):
+				if 'g' in fe:
+					gcount += 1
+					if self.gdarkoffset[j] is None: self.gdarkoffset[j] = i*surveycadence[j]
+				if 'r' in fe:
+					rcount += 1
+					if self.rdarkoffset[j] is None: self.rdarkoffset[j] = i*surveycadence[j]
+				if 'i' in fe:
+					icount += 1
+					if self.idarkoffset[j] is None: self.idarkoffset[j] = i*surveycadence[j]
+				if 'z' in fe:
+					zcount += 1
+					if self.zdarkoffset[j] is None: self.zdarkoffset[j] = i*surveycadence[j]
+			if gcount != 0: self.gdarkcadence += [len(filtdarkepochs)/gcount*surveycadence[j]]
+			else: self.gdarkoffset[j] = 99999; self.gdarkcadence += [99999]
+			if rcount != 0: self.rdarkcadence += [len(filtdarkepochs)/rcount*surveycadence[j]]
+			else: self.rdarkoffset[j] = 99999; self.rdarkcadence += [99999]
+			if icount != 0: self.idarkcadence += [len(filtdarkepochs)/icount*surveycadence[j]]
+			else: self.idarkoffset[j] = 99999; self.idarkcadence += [99999]
+			if zcount != 0: self.zdarkcadence += [len(filtdarkepochs)/zcount*surveycadence[j]]
+			else: self.zdarkoffset[j] = 99999; self.zdarkcadence += [99999]
 
-		if gcount != 0: self.gbrightcadence = len(filtbrightepochs)/gcount*surveycadence
-		else: self.gbrightoffset = 99999; self.gbrightcadence = 99999
-		if rcount != 0: self.rbrightcadence = len(filtbrightepochs)/rcount*surveycadence
-		else: self.rbrightoffset = 99999; self.rbrightcadence = 99999
-		if icount != 0: self.ibrightcadence = len(filtbrightepochs)/icount*surveycadence
-		else: self.ibrightoffset = 99999; self.ibrightcadence = 99999
-		if zcount != 0: self.zbrightcadence = len(filtbrightepochs)/zcount*surveycadence
-		else: self.zbrightoffset = 99999; self.zbrightcadence = 99999
+			filtbrightepochs = custombright.split(',')
+			gcount,rcount,icount,zcount = 0,0,0,0
+			for i,fe in enumerate(filtbrightepochs):
+				if 'g' in fe:
+					gcount += 1
+					if self.gbrightoffset[j] is None: self.gbrightoffset[j] = i*surveycadence[j]
+				if 'r' in fe:
+					rcount += 1
+					if self.rbrightoffset[j] is None: self.rbrightoffset[j] = i*surveycadence[j]
+				if 'i' in fe:
+					icount += 1
+					if self.ibrightoffset[j] is None: self.ibrightoffset[j] = i*surveycadence[j]
+				if 'z' in fe:
+					zcount += 1
+					if self.zbrightoffset[j] is None: self.zbrightoffset[j] = i*surveycadence[j]
+
+			if gcount != 0: self.gbrightcadence += [len(filtbrightepochs)/gcount*surveycadence[j]]
+			else: self.gbrightoffset[j] = 99999; self.gbrightcadence += [99999]
+			if rcount != 0: self.rbrightcadence += [len(filtbrightepochs)/rcount*surveycadence[j]]
+			else: self.rbrightoffset[j] = 99999; self.rbrightcadence += [99999]
+			if icount != 0: self.ibrightcadence += [len(filtbrightepochs)/icount*surveycadence[j]]
+			else: self.ibrightoffset[j] = 99999; self.ibrightcadence += [99999]
+			if zcount != 0: self.zbrightcadence += [len(filtbrightepochs)/zcount*surveycadence[j]]
+			else: self.zbrightoffset[j] = 99999; self.zbrightcadence += [99999]
 
 		filtonedarkepochs = customonedark.split(',')
 		gcount,rcount,icount,zcount = 0,0,0,0
@@ -571,23 +587,23 @@ END_LIBID:		2
 		for i,fe in enumerate(filtonedarkepochs):
 			if 'g' in fe:
 				gcount += 1
-				if self.gonedarkoffset is None: self.gonedarkoffset = i*surveycadence
+				if self.gonedarkoffset is None: self.gonedarkoffset = i
 			if 'r' in fe:
 				rcount += 1
-				if self.ronedarkoffset is None: self.ronedarkoffset = i*surveycadence
+				if self.ronedarkoffset is None: self.ronedarkoffset = i
 			if 'i' in fe:
 				icount += 1
-				if self.ionedarkoffset is None: self.ionedarkoffset = i*surveycadence
+				if self.ionedarkoffset is None: self.ionedarkoffset = i
 			if 'z' in fe:
 				zcount += 1
-				if self.zonedarkoffset is None: self.zonedarkoffset = i*surveycadence
-		if gcount != 0: self.gonedarkcadence = len(filtonedarkepochs)/gcount*surveycadence
+				if self.zonedarkoffset is None: self.zonedarkoffset = i
+		if gcount != 0: self.gonedarkcadence = len(filtonedarkepochs)/gcount
 		else: self.gonedarkoffset = 99999; self.gonedarkcadence = 99999
-		if rcount != 0: self.ronedarkcadence = len(filtonedarkepochs)/rcount*surveycadence
+		if rcount != 0: self.ronedarkcadence = len(filtonedarkepochs)/rcount
 		else: self.ronedarkoffset = 99999; self.ronedarkcadence = 99999
-		if icount != 0: self.ionedarkcadence = len(filtonedarkepochs)/icount*surveycadence
+		if icount != 0: self.ionedarkcadence = len(filtonedarkepochs)/icount
 		else: self.ionedarkoffset = 99999; self.ionedarkcadence = 99999
-		if zcount != 0: self.zonedarkcadence = len(filtonedarkepochs)/zcount*surveycadence
+		if zcount != 0: self.zonedarkcadence = len(filtonedarkepochs)/zcount
 		else: self.zonedarkoffset = 99999; self.zonedarkcadence = 99999
 
 		filtonebrightepochs = customonebright.split(',')
@@ -596,26 +612,26 @@ END_LIBID:		2
 		for i,fe in enumerate(filtonebrightepochs):
 			if 'g' in fe:
 				gcount += 1
-				if self.gonebrightoffset is None: self.gonebrightoffset = i*surveycadence
+				if self.gonebrightoffset is None: self.gonebrightoffset = i
 			if 'r' in fe:
 				rcount += 1
-				if self.ronebrightoffset is None: self.ronebrightoffset = i*surveycadence
+				if self.ronebrightoffset is None: self.ronebrightoffset = i
 			if 'i' in fe:
 				icount += 1
-				if self.ionebrightoffset is None: self.ionebrightoffset = i*surveycadence
+				if self.ionebrightoffset is None: self.ionebrightoffset = i
 			if 'z' in fe:
 				zcount += 1
-				if self.zonebrightoffset is None: self.zonebrightoffset = i*surveycadence
+				if self.zonebrightoffset is None: self.zonebrightoffset = i
 
-		if gcount != 0: self.gonebrightcadence = len(filtonebrightepochs)/gcount*surveycadence
+		if gcount != 0: self.gonebrightcadence = len(filtonebrightepochs)/gcount
 		else: self.gonebrightoffset = 99999; self.gonebrightcadence = 99999
-		if rcount != 0: self.ronebrightcadence = len(filtonebrightepochs)/rcount*surveycadence
+		if rcount != 0: self.ronebrightcadence = len(filtonebrightepochs)/rcount
 		else: self.ronebrightoffset = 99999; self.ronebrightcadence = 99999
-		if icount != 0: self.ionebrightcadence = len(filtonebrightepochs)/icount*surveycadence
+		if icount != 0: self.ionebrightcadence = len(filtonebrightepochs)/icount
 		else: self.ionebrightoffset = 99999; self.ionebrightcadence = 99999
-		if zcount != 0: self.zonebrightcadence = len(filtonebrightepochs)/zcount*surveycadence
+		if zcount != 0: self.zonebrightcadence = len(filtonebrightepochs)/zcount
 		else: self.zonebrightoffset = 99999; self.zonebrightcadence = 99999
-	
+			
 	def mksimlib_moon(self,customdark,custombright,customonedark,customonebright,
 					  simlibfile,surveycadence=3,simperfect=False,ztfsim=True,
 					  ztf_offset=None,onedayfrac=0,exptime=15):
@@ -644,31 +660,54 @@ END_LIBID:		2
 
 		# mag lims with moon phase from Sofie
 		limmjdg,limmagg,limmjdr,limmagr,limmjdi,limmagi = getmjdmaglims()
-			
+
+		# allowing multiple cadences
+		cadencecount = 0
+		cadencelen = len(surveycadence.split(','))
+		surveycadence = np.array(surveycadence.split(',')).astype(float)
+		
 		# nominal survey
-		count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
+		count = 0; nightcountztf = -1; usednightcount = 0; ps1count = 0
+		nightcount = [-1]*len(surveycadence)
 		simliblines = []
 		times = Time(mjd,format='mjd')
+		lastmjd = mjd[0]
 		for m,t in zip(mjd,times):
-			nightcount += 1
-
+			if m-lastmjd >= surveycadence[cadencecount % cadencelen]:
+				cadencecount += 1
+				lastmjd = m
+			
 			#t = Time(m,format='mjd')
 			illum = moon_illumination(t)
 			if illum > 0.75:
-				gcadence,rcadence,icadence,zcadence = self.gbrightcadence,self.rbrightcadence,self.ibrightcadence,self.zbrightcadence
-				goffset,roffset,ioffset,zoffset = self.gbrightoffset,self.rbrightoffset,self.ibrightoffset,self.zbrightoffset
+				gcadence,rcadence,icadence,zcadence = \
+					self.gbrightcadence[cadencecount % cadencelen],self.rbrightcadence[cadencecount % cadencelen],\
+					self.ibrightcadence[cadencecount % cadencelen],self.zbrightcadence[cadencecount % cadencelen]
+				goffset,roffset,ioffset,zoffset = \
+					self.gbrightoffset[cadencecount % cadencelen],self.rbrightoffset[cadencecount % cadencelen],\
+					self.ibrightoffset[cadencecount % cadencelen],self.zbrightoffset[cadencecount % cadencelen]
 			else:
-				gcadence,rcadence,icadence,zcadence = self.gdarkcadence,self.rdarkcadence,self.idarkcadence,self.zdarkcadence
-				goffset,roffset,ioffset,zoffset = self.gdarkoffset,self.rdarkoffset,self.idarkoffset,self.zdarkoffset
-				
+				gcadence,rcadence,icadence,zcadence = \
+					self.gdarkcadence[cadencecount % cadencelen],self.rdarkcadence[cadencecount % cadencelen],\
+					self.idarkcadence[cadencecount % cadencelen],self.zdarkcadence[cadencecount % cadencelen]
+				goffset,roffset,ioffset,zoffset = \
+					self.gdarkoffset[cadencecount % cadencelen],self.rdarkoffset[cadencecount % cadencelen],\
+					self.idarkoffset[cadencecount % cadencelen],self.zdarkoffset[cadencecount % cadencelen]
+			#print(self.gdarkcadence[cadencecount % cadencelen],cadencecount,gcadence,rcadence)
+
+			nightcount[cadencecount % cadencelen] += 1
+			nightcountztf += 1
+			#import pdb; pdb.set_trace()
+			
 			maglimg = np.interp(m,limmjdg,limmagg)
 			maglimr = np.interp(m,limmjdr,limmagr)
 			maglimi = np.interp(m,limmjdi,limmagi)
-			
+
+			# HACK
 			if ztf_offset < 0:
 				randval = random.uniform(0, 1)
 				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
-					if not nightcount % 3 or simperfect:
+					if not nightcountztf % 3 or simperfect:
 						iLine = random.sample(range(len(glines)),1)[0]
 						for lines in [rlines]:
 							line = lines[iLine][0]
@@ -693,7 +732,7 @@ END_LIBID:		2
 			randval = random.uniform(0, 1)
 			if randval > haleakaladict[mjd_to_month(m)] or simperfect:
 				iLine = random.sample(range(len(glines)),1)[0]
-				if gcadence and (not (nightcount - goffset) % gcadence and nightcount - goffset >= 0) or simperfect:
+				if gcadence and (not (nightcount[cadencecount % cadencelen] - goffset) % gcadence and nightcount[cadencecount % cadencelen] - goffset >= 0) or simperfect:
 					for lines in [glines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -708,7 +747,7 @@ END_LIBID:		2
 						
 						count += 1
 						ps1count += 1
-				if rcadence and (not (nightcount - roffset) % rcadence and nightcount - roffset >= 0) or simperfect:
+				if rcadence and (not (nightcount[cadencecount % cadencelen] - roffset) % rcadence and nightcount[cadencecount % cadencelen] - roffset >= 0) or simperfect:
 					for lines in [rlines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -723,7 +762,7 @@ END_LIBID:		2
 						
 						count += 1
 						ps1count += 1
-				if icadence and (not (nightcount - ioffset) % icadence and nightcount - ioffset >= 0) or simperfect:
+				if icadence and (not (nightcount[cadencecount % cadencelen] - ioffset) % icadence and nightcount[cadencecount % cadencelen] - ioffset >= 0) or simperfect:
 					for lines in [ilines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -739,7 +778,7 @@ END_LIBID:		2
 
 						count += 1
 						ps1count += 1
-				if zcadence and (not (nightcount - zoffset) % zcadence and nightcount - zoffset >= 0) or simperfect:
+				if zcadence and (not (nightcount[cadencecount % cadencelen] - zoffset) % zcadence and nightcount[cadencecount % cadencelen] - zoffset >= 0) or simperfect:
 					for lines in [zlines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -754,14 +793,14 @@ END_LIBID:		2
 						count += 1
 						ps1count += 1
 						
-				if not nightcount % gcadence - goffset or not nightcount % rcadence - roffset or not \
-				   nightcount % icadence - ioffset or not nightcount % zcadence - zoffset:
+				if not nightcount[cadencecount % cadencelen] % gcadence - goffset or not nightcount[cadencecount % cadencelen] % rcadence - roffset or not \
+				   nightcount[cadencecount % cadencelen] % icadence - ioffset or not nightcount[cadencecount % cadencelen] % zcadence - zoffset:
 					usednightcount += 1
 
 			if ztf_offset > 0:
 				randval = random.uniform(0, 1)
 				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
-					if not nightcount % 3 or simperfect:
+					if not nightcountztf % 3 or simperfect:
 						iLine = random.sample(range(len(glines)),1)[0]
 						for lines in [rlines]:
 							line = lines[iLine][0]
