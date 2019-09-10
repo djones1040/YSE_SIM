@@ -826,7 +826,7 @@ END_LIBID:		2
 		fout.close()
 
 		# ps1count/usednightcount is # of filters
-		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)*3
+		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)*np.mean(surveycadence)
 		nfields = int(surveyarea/(7*(np.pi/180.)**2.))
 
 		fout = open(simlibfile,'a')
