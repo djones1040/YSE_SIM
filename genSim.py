@@ -41,11 +41,11 @@ haleakaladict = {'01':0.323,'02':0.357,'03':0.355,'04':0.333,'05':0.355,'06':0.2
 palomardict = {'01':0.452,'02':0.607,'03':0.452,'04':0.300,'05':0.161,'06':0.067,
 			   '07':0.097,'08':0.161,'09':0.167,'10':0.226,'11':0.300,'12':0.387}
 
-#print('hack!')
-#haleakaladict = {'01':0.0,'02':0.0,'03':0.0,'04':0.0,'05':0.0,'06':0.0,
-#				 '07':0.0,'08':0.0,'09':0.0,'10':0.0,'11':0.0,'12':0.0}
-#palomardict = {'01':0.0,'02':0.0,'03':0.0,'04':0.0,'05':0.0,'06':0.0,
-#			   '07':0.0,'08':0.0,'09':0.0,'10':0.0,'11':0.0,'12':0.0}
+print('hack!')
+haleakaladict = {'01':0.0,'02':0.0,'03':0.0,'04':0.0,'05':0.0,'06':0.0,
+				 '07':0.0,'08':0.0,'09':0.0,'10':0.0,'11':0.0,'12':0.0}
+palomardict = {'01':0.0,'02':0.0,'03':0.0,'04':0.0,'05':0.0,'06':0.0,
+			   '07':0.0,'08':0.0,'09':0.0,'10':0.0,'11':0.0,'12':0.0}
 
 
 def mkGoodWeatherList(simlibfile = 'PS1MD.simlib',
@@ -141,10 +141,13 @@ class mkSimlibs:
 			'--surveycadence', default='3',type="string",
 			help='cadence, used for custom survey.  Can be comma-separated to alternate (default=%default)')
 		parser.add_option(
+			'--surveycadencebright', default='3',type="string",
+			help='cadence, used for custom survey.  Can be comma-separated to alternate (default=%default)')
+		parser.add_option(
 			'--exptime', default=15,type="float",
 			help='exposure time in seconds (default=%default)')
 		parser.add_option(
-			'--onedayfrac', default=0.1,type="float",
+			'--onedayfrac', default=0.0,type="float",
 			help='fraction of survey with a one-day cadence, w/ offsets also divided by 3 for this subset (default=%default)')
 		parser.add_option(
 			'--simlibfile', default='snanasimlibs/yse.simlib',type="string",
@@ -516,15 +519,16 @@ END_LIBID:		2
 		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
 		return surveyarea+surveyarea_oneday, 0 #/(1-onedayfrac),surveyarea/(1-onedayfrac)
 
-	def get_cadences(self,customdark,custombright,customonedark,customonebright,surveycadence):
+	def get_cadences(self,customdark,custombright,customonedark,customonebright,surveycadence,surveycadencebright):
 
 		surveycadence = np.array(surveycadence.split(',')).astype('float')
 		self.gdarkcadence,self.rdarkcadence,self.idarkcadence,self.zdarkcadence = [],[],[],[]
 		self.gdarkoffset,self.rdarkoffset,self.idarkoffset,self.zdarkoffset = \
 			[None]*len(surveycadence),[None]*len(surveycadence),[None]*len(surveycadence),[None]*len(surveycadence)
+		surveycadencebright = np.array(surveycadencebright.split(',')).astype('float')
 		self.gbrightcadence,self.rbrightcadence,self.ibrightcadence,self.zbrightcadence = [],[],[],[]
 		self.gbrightoffset,self.rbrightoffset,self.ibrightoffset,self.zbrightoffset = \
-			[None]*len(surveycadence),[None]*len(surveycadence),[None]*len(surveycadence),[None]*len(surveycadence)
+			[None]*len(surveycadencebright),[None]*len(surveycadencebright),[None]*len(surveycadencebright),[None]*len(surveycadencebright)
 
 		
 		for j in range(len(surveycadence)):
@@ -556,29 +560,31 @@ END_LIBID:		2
 			if zcount != 0: self.zdarkcadence += [len(filtdarkepochs)/zcount*surveycadence[j]]
 			else: self.zdarkoffset[j] = 99999; self.zdarkcadence += [99999]
 
+		for j in range(len(surveycadencebright)):
+
 			filtbrightepochs = custombright.split(',')
 			gcount,rcount,icount,zcount = 0,0,0,0
 			for i,fe in enumerate(filtbrightepochs):
 				if 'g' in fe:
 					gcount += 1
-					if self.gbrightoffset[j] is None: self.gbrightoffset[j] = i*surveycadence[j]
+					if self.gbrightoffset[j] is None: self.gbrightoffset[j] = i*surveycadencebright[j]
 				if 'r' in fe:
 					rcount += 1
-					if self.rbrightoffset[j] is None: self.rbrightoffset[j] = i*surveycadence[j]
+					if self.rbrightoffset[j] is None: self.rbrightoffset[j] = i*surveycadencebright[j]
 				if 'i' in fe:
 					icount += 1
-					if self.ibrightoffset[j] is None: self.ibrightoffset[j] = i*surveycadence[j]
+					if self.ibrightoffset[j] is None: self.ibrightoffset[j] = i*surveycadencebright[j]
 				if 'z' in fe:
 					zcount += 1
-					if self.zbrightoffset[j] is None: self.zbrightoffset[j] = i*surveycadence[j]
+					if self.zbrightoffset[j] is None: self.zbrightoffset[j] = i*surveycadencebright[j]
 
-			if gcount != 0: self.gbrightcadence += [len(filtbrightepochs)/gcount*surveycadence[j]]
+			if gcount != 0: self.gbrightcadence += [len(filtbrightepochs)/gcount*surveycadencebright[j]]
 			else: self.gbrightoffset[j] = 99999; self.gbrightcadence += [99999]
-			if rcount != 0: self.rbrightcadence += [len(filtbrightepochs)/rcount*surveycadence[j]]
+			if rcount != 0: self.rbrightcadence += [len(filtbrightepochs)/rcount*surveycadencebright[j]]
 			else: self.rbrightoffset[j] = 99999; self.rbrightcadence += [99999]
-			if icount != 0: self.ibrightcadence += [len(filtbrightepochs)/icount*surveycadence[j]]
+			if icount != 0: self.ibrightcadence += [len(filtbrightepochs)/icount*surveycadencebright[j]]
 			else: self.ibrightoffset[j] = 99999; self.ibrightcadence += [99999]
-			if zcount != 0: self.zbrightcadence += [len(filtbrightepochs)/zcount*surveycadence[j]]
+			if zcount != 0: self.zbrightcadence += [len(filtbrightepochs)/zcount*surveycadencebright[j]]
 			else: self.zbrightoffset[j] = 99999; self.zbrightcadence += [99999]
 
 		filtonedarkepochs = customonedark.split(',')
@@ -633,13 +639,13 @@ END_LIBID:		2
 		else: self.zonebrightoffset = 99999; self.zonebrightcadence = 99999
 			
 	def mksimlib_moon(self,customdark,custombright,customonedark,customonebright,
-					  simlibfile,surveycadence=3,simperfect=False,ztfsim=True,
+					  simlibfile,surveycadence=3,surveycadencebright=3,simperfect=False,ztfsim=True,
 					  ztf_offset=None,onedayfrac=0,exptime=15):
 		# 3 day cadence, gr gi gz
 		glines,rlines,ilines,zlines = getlines()
 		mjd_goodweather = np.loadtxt('weather/yse_goodweather.list',unpack=True)
 
-		self.get_cadences(customdark,custombright,customonedark,customonebright,surveycadence)
+		self.get_cadences(customdark,custombright,customonedark,customonebright,surveycadence,surveycadencebright)
 		
 		# ZTF is 3 hours earlier
 		#ztf_offset = -0.125
@@ -665,27 +671,39 @@ END_LIBID:		2
 		cadencecount = 0
 		cadencelen = len(surveycadence.split(','))
 		surveycadence = np.array(surveycadence.split(',')).astype(float)
+
+		cadencecountbright = 0
+		cadencelenbright = len(surveycadencebright.split(','))
+		surveycadencebright = np.array(surveycadencebright.split(',')).astype(float)
+
 		
 		# nominal survey
 		count = 0; nightcountztf = -1; usednightcount = 0; ps1count = 0
 		nightcount = [-1]*len(surveycadence)
+		nightcountbright = [-1]*len(surveycadencebright)
 		simliblines = []
 		times = Time(mjd,format='mjd')
-		lastmjd = mjd[0]
+		lastmjd,lastmjdbright = mjd[0],mjd[0]
+		nights_on_telescope = 0
 		for m,t in zip(mjd,times):
 			if m-lastmjd >= surveycadence[cadencecount % cadencelen]:
 				cadencecount += 1
 				lastmjd = m
+			if m-lastmjdbright >= surveycadencebright[cadencecountbright % cadencelenbright]:
+				cadencecountbright += 1
+				lastmjdbright = m
 			
 			#t = Time(m,format='mjd')
 			illum = moon_illumination(t)
 			if illum > 0.75:
 				gcadence,rcadence,icadence,zcadence = \
-					self.gbrightcadence[cadencecount % cadencelen],self.rbrightcadence[cadencecount % cadencelen],\
-					self.ibrightcadence[cadencecount % cadencelen],self.zbrightcadence[cadencecount % cadencelen]
+					self.gbrightcadence[cadencecountbright % cadencelenbright],self.rbrightcadence[cadencecountbright % cadencelenbright],\
+					self.ibrightcadence[cadencecountbright % cadencelenbright],self.zbrightcadence[cadencecountbright % cadencelenbright]
 				goffset,roffset,ioffset,zoffset = \
-					self.gbrightoffset[cadencecount % cadencelen],self.rbrightoffset[cadencecount % cadencelen],\
-					self.ibrightoffset[cadencecount % cadencelen],self.zbrightoffset[cadencecount % cadencelen]
+					self.gbrightoffset[cadencecountbright % cadencelenbright],self.rbrightoffset[cadencecountbright % cadencelenbright],\
+					self.ibrightoffset[cadencecountbright % cadencelenbright],self.zbrightoffset[cadencecountbright % cadencelenbright]
+				nightcountbright[cadencecountbright % cadencelenbright] += 1
+				nightcounttmp = nightcountbright[cadencecountbright % cadencelenbright]
 			else:
 				gcadence,rcadence,icadence,zcadence = \
 					self.gdarkcadence[cadencecount % cadencelen],self.rdarkcadence[cadencecount % cadencelen],\
@@ -693,9 +711,11 @@ END_LIBID:		2
 				goffset,roffset,ioffset,zoffset = \
 					self.gdarkoffset[cadencecount % cadencelen],self.rdarkoffset[cadencecount % cadencelen],\
 					self.idarkoffset[cadencecount % cadencelen],self.zdarkoffset[cadencecount % cadencelen]
+				nightcount[cadencecount % cadencelen] += 1
+				nightcounttmp = nightcount[cadencecount % cadencelen]
 			#print(self.gdarkcadence[cadencecount % cadencelen],cadencecount,gcadence,rcadence)
 
-			nightcount[cadencecount % cadencelen] += 1
+
 			nightcountztf += 1
 			#import pdb; pdb.set_trace()
 			
@@ -732,7 +752,7 @@ END_LIBID:		2
 			randval = random.uniform(0, 1)
 			if randval > haleakaladict[mjd_to_month(m)] or simperfect:
 				iLine = random.sample(range(len(glines)),1)[0]
-				if gcadence and (not (nightcount[cadencecount % cadencelen] - goffset) % gcadence and nightcount[cadencecount % cadencelen] - goffset >= 0) or simperfect:
+				if gcadence and (not (nightcounttmp - goffset) % gcadence and nightcounttmp - goffset >= 0) or simperfect:
 					for lines in [glines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -747,7 +767,7 @@ END_LIBID:		2
 						
 						count += 1
 						ps1count += 1
-				if rcadence and (not (nightcount[cadencecount % cadencelen] - roffset) % rcadence and nightcount[cadencecount % cadencelen] - roffset >= 0) or simperfect:
+				if rcadence and (not (nightcounttmp - roffset) % rcadence and nightcounttmp - roffset >= 0) or simperfect:
 					for lines in [rlines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -762,7 +782,7 @@ END_LIBID:		2
 						
 						count += 1
 						ps1count += 1
-				if icadence and (not (nightcount[cadencecount % cadencelen] - ioffset) % icadence and nightcount[cadencecount % cadencelen] - ioffset >= 0) or simperfect:
+				if icadence and (not (nightcounttmp - ioffset) % icadence and nightcounttmp - ioffset >= 0) or simperfect:
 					for lines in [ilines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -778,7 +798,7 @@ END_LIBID:		2
 
 						count += 1
 						ps1count += 1
-				if zcadence and (not (nightcount[cadencecount % cadencelen] - zoffset) % zcadence and nightcount[cadencecount % cadencelen] - zoffset >= 0) or simperfect:
+				if zcadence and (not (nightcounttmp - zoffset) % zcadence and nightcounttmp - zoffset >= 0) or simperfect:
 					for lines in [zlines]:
 						line = lines[iLine][0]
 						linemjd = line.split()[1]
@@ -793,10 +813,14 @@ END_LIBID:		2
 						count += 1
 						ps1count += 1
 						
-				if not nightcount[cadencecount % cadencelen] % gcadence - goffset or not nightcount[cadencecount % cadencelen] % rcadence - roffset or not \
-				   nightcount[cadencecount % cadencelen] % icadence - ioffset or not nightcount[cadencecount % cadencelen] % zcadence - zoffset:
+				if not nightcounttmp % gcadence - goffset or not nightcounttmp % rcadence - roffset or not \
+				   nightcounttmp % icadence - ioffset or not nightcounttmp % zcadence - zoffset:
 					usednightcount += 1
+			if not nightcounttmp % gcadence - goffset or not nightcounttmp % rcadence - roffset or not \
+			   nightcounttmp % icadence - ioffset or not nightcounttmp % zcadence - zoffset:
+				nights_on_telescope += 1
 
+					
 			if ztf_offset > 0:
 				randval = random.uniform(0, 1)
 				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
@@ -826,7 +850,7 @@ END_LIBID:		2
 		fout.close()
 
 		# ps1count/usednightcount is # of filters
-		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)*np.mean(surveycadence)
+		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)*len(mjd)/nights_on_telescope #np.mean(surveycadence)
 		nfields = int(surveyarea/(7*(np.pi/180.)**2.))
 
 		fout = open(simlibfile,'a')
@@ -1588,6 +1612,7 @@ if __name__ == "__main__":
 			options.customsurveydark,options.customsurveybright,options.customonedaydark,options.customonedaybright,
 			options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
 			surveycadence=options.surveycadence,
+			surveycadencebright=options.surveycadencebright,
 			simperfect=options.perfect,
 			ztf_offset=options.ztfoffset,
 			onedayfrac=options.onedayfrac,exptime=options.exptime)
