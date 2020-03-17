@@ -919,168 +919,171 @@ END_LIBID:		1
 		fout.close()
 
 		# one-day survey
-		count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
-		simliblines_oneday = []
-		rzpt,izpt = [],[]
+		if 'gonebrightcadence' in self.__dict__.keys():
+			count = 0; nightcount = -1; usednightcount = 0; ps1count = 0
+			simliblines_oneday = []
+			rzpt,izpt = [],[]
 
-		for m,t in zip(mjd,times):
-			nightcount += 1
+			for m,t in zip(mjd,times):
+				nightcount += 1
 
-			illum = moon_illumination(t)
-			if illum > 0.75:
-				gonedaycadence,ronedaycadence,ionedaycadence,zonedaycadence = \
-					self.gonebrightcadence,self.ronebrightcadence,self.ionebrightcadence,self.zonebrightcadence
-				gonedayoffset,ronedayoffset,ionedayoffset,zonedayoffset = \
-					self.gonebrightoffset,self.ronebrightoffset,self.ionebrightoffset,self.zonebrightoffset
-			else:
-				gonedaycadence,ronedaycadence,ionedaycadence,zonedaycadence = \
-					self.gonedarkcadence,self.ronedarkcadence,self.ionedarkcadence,self.zonedarkcadence
-				gonedayoffset,ronedayoffset,ionedayoffset,zonedayoffset = \
-					self.gonedarkoffset,self.ronedarkoffset,self.ionedarkoffset,self.zonedarkoffset
-			
-			maglimg = np.interp(m,limmjdg,limmagg)
-			maglimr = np.interp(m,limmjdr,limmagr)
-			maglimi = np.interp(m,limmjdi,limmagi)
-			
-			if ztf_offset < 0:
+				illum = moon_illumination(t)
+				if illum > 0.75:
+					gonedaycadence,ronedaycadence,ionedaycadence,zonedaycadence = \
+						self.gonebrightcadence,self.ronebrightcadence,self.ionebrightcadence,self.zonebrightcadence
+					gonedayoffset,ronedayoffset,ionedayoffset,zonedayoffset = \
+						self.gonebrightoffset,self.ronebrightoffset,self.ionebrightoffset,self.zonebrightoffset
+				else:
+					gonedaycadence,ronedaycadence,ionedaycadence,zonedaycadence = \
+						self.gonedarkcadence,self.ronedarkcadence,self.ionedarkcadence,self.zonedarkcadence
+					gonedayoffset,ronedayoffset,ionedayoffset,zonedayoffset = \
+						self.gonedarkoffset,self.ronedarkoffset,self.ionedarkoffset,self.zonedarkoffset
+
+				maglimg = np.interp(m,limmjdg,limmagg)
+				maglimr = np.interp(m,limmjdr,limmagr)
+				maglimi = np.interp(m,limmjdi,limmagi)
+
+				if ztf_offset < 0:
+					randval = random.uniform(0, 1)
+					if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
+						if not nightcount % 3 or simperfect:
+							iLine = random.sample(range(len(glines)),1)[0]
+							for lines in [rlines]:
+								line = lines[iLine][0]
+								linemjd = line.split()[1]
+								lineid = line.split()[2]
+								skysig = line.split()[6]
+								linezpt = line.split()[10]
+								newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
+								newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
+								lineparts = line.split()
+								lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
+								simlibline = " ".join(lineparts)
+								simliblines_oneday += [simlibline]
+								lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%(count+1); lineparts[6] = '%.2f'%newskysigr; lineparts[3] = 'Y'
+								simlibline = " ".join(lineparts)
+								simliblines_oneday += [simlibline]
+
+								count += 2
+
+				# replace random weather with PS1 MD observations
+				# includes not much data at bright time
 				randval = random.uniform(0, 1)
-				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
-					if not nightcount % 3 or simperfect:
-						iLine = random.sample(range(len(glines)),1)[0]
+				if randval > haleakaladict[mjd_to_month(m)] or simperfect:
+					iLine = random.sample(range(len(glines)),1)[0]
+					if gonedaycadence and (not (nightcount - gonedayoffset)%(gonedaycadence) and nightcount - gonedayoffset >= 0) or simperfect:
+						for lines in [glines]:
+							line = lines[iLine][0]
+							linemjd = line.split()[1]
+							lineid = int(line.split()[2])
+							skysig = line.split()[6]
+							linezpt = line.split()[10]
+							newskysig = self.skynoisefrommaglim(maglimg+goff,float(linezpt),areascale=3)
+							lineparts = line.split()
+							lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
+							simlibline = " ".join(lineparts)
+							simliblines_oneday += [simlibline]
+
+							count += 1
+							ps1count += 1
+					if ronedaycadence and (not (nightcount - ronedayoffset)%(ronedaycadence) and nightcount - ronedayoffset >= 0) or simperfect:
 						for lines in [rlines]:
 							line = lines[iLine][0]
 							linemjd = line.split()[1]
 							lineid = line.split()[2]
 							skysig = line.split()[6]
 							linezpt = line.split()[10]
-							newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
-							newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
+							newskysig = self.skynoisefrommaglim(maglimr+roff,float(linezpt),areascale=2.1)
 							lineparts = line.split()
-							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
-							simlibline = " ".join(lineparts)
-							simliblines_oneday += [simlibline]
-							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%(count+1); lineparts[6] = '%.2f'%newskysigr; lineparts[3] = 'Y'
+							lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 							simlibline = " ".join(lineparts)
 							simliblines_oneday += [simlibline]
 
-							count += 2
-							
-			# replace random weather with PS1 MD observations
-			# includes not much data at bright time
-			randval = random.uniform(0, 1)
-			if randval > haleakaladict[mjd_to_month(m)] or simperfect:
-				iLine = random.sample(range(len(glines)),1)[0]
-				if gonedaycadence and (not (nightcount - gonedayoffset)%(gonedaycadence) and nightcount - gonedayoffset >= 0) or simperfect:
-					for lines in [glines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = int(line.split()[2])
-						skysig = line.split()[6]
-						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimg+goff,float(linezpt),areascale=3)
-						lineparts = line.split()
-						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
-						simlibline = " ".join(lineparts)
-						simliblines_oneday += [simlibline]
-						
-						count += 1
-						ps1count += 1
-				if ronedaycadence and (not (nightcount - ronedayoffset)%(ronedaycadence) and nightcount - ronedayoffset >= 0) or simperfect:
-					for lines in [rlines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						skysig = line.split()[6]
-						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimr+roff,float(linezpt),areascale=2.1)
-						lineparts = line.split()
-						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
-						simlibline = " ".join(lineparts)
-						simliblines_oneday += [simlibline]
-
-						count += 1
-						ps1count += 1
-				if ionedaycadence and (not (nightcount - ionedayoffset)%(ionedaycadence) and nightcount - ionedayoffset >= 0) or simperfect:
-					for lines in [ilines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						skysig = line.split()[6]
-						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimi+ioff,float(linezpt),areascale=2.1)
-						lineparts = line.split()
-						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
-						simlibline = " ".join(lineparts)
-						simliblines_oneday += [simlibline]
-
-						count += 1
-						ps1count += 1
-				if zonedaycadence and (not (nightcount - zonedayoffset)%(zonedaycadence) and nightcount - zonedayoffset >= 0) or simperfect:
-					for lines in [zlines]:
-						line = lines[iLine][0]
-						linemjd = line.split()[1]
-						lineid = line.split()[2]
-						skysig = line.split()[6]
-						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimz+zoff,float(linezpt),areascale=2.1)
-						lineparts = line.split()
-						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
-						simlibline = " ".join(lineparts)
-						simliblines_oneday += [simlibline]
-
-						count += 1
-						ps1count += 1
-
-
-				if not nightcount % gonedaycadence - gonedayoffset or not nightcount % ronedaycadence - ronedayoffset or not \
-				   nightcount % ionedaycadence - ionedayoffset or not nightcount % zonedaycadence - zonedayoffset:
-					usednightcount += 1
-			
-			if ztf_offset > 0:
-				randval = random.uniform(0, 1)
-				if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
-					if not nightcount % 3 or simperfect:
-						iLine = random.sample(range(len(glines)),1)[0]
-						for lines in [rlines]:
+							count += 1
+							ps1count += 1
+					if ionedaycadence and (not (nightcount - ionedayoffset)%(ionedaycadence) and nightcount - ionedayoffset >= 0) or simperfect:
+						for lines in [ilines]:
 							line = lines[iLine][0]
 							linemjd = line.split()[1]
 							lineid = line.split()[2]
 							skysig = line.split()[6]
 							linezpt = line.split()[10]
-							newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
-							newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
+							newskysig = self.skynoisefrommaglim(maglimi+ioff,float(linezpt),areascale=2.1)
 							lineparts = line.split()
-							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
+							lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 							simlibline = " ".join(lineparts)
 							simliblines_oneday += [simlibline]
-							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%(count+1); lineparts[6] = '%.2f'%newskysigr; lineparts[3] = 'Y'
+
+							count += 1
+							ps1count += 1
+					if zonedaycadence and (not (nightcount - zonedayoffset)%(zonedaycadence) and nightcount - zonedayoffset >= 0) or simperfect:
+						for lines in [zlines]:
+							line = lines[iLine][0]
+							linemjd = line.split()[1]
+							lineid = line.split()[2]
+							skysig = line.split()[6]
+							linezpt = line.split()[10]
+							newskysig = self.skynoisefrommaglim(maglimz+zoff,float(linezpt),areascale=2.1)
+							lineparts = line.split()
+							lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 							simlibline = " ".join(lineparts)
 							simliblines_oneday += [simlibline]
-						
-							count += 2
+
+							count += 1
+							ps1count += 1
+
+
+					if not nightcount % gonedaycadence - gonedayoffset or not nightcount % ronedaycadence - ronedayoffset or not \
+					   nightcount % ionedaycadence - ionedayoffset or not nightcount % zonedaycadence - zonedayoffset:
+						usednightcount += 1
+
+				if ztf_offset > 0:
+					randval = random.uniform(0, 1)
+					if ztfsim and (randval > palomardict[mjd_to_month(m)] or simperfect):
+						if not nightcount % 3 or simperfect:
+							iLine = random.sample(range(len(glines)),1)[0]
+							for lines in [rlines]:
+								line = lines[iLine][0]
+								linemjd = line.split()[1]
+								lineid = line.split()[2]
+								skysig = line.split()[6]
+								linezpt = line.split()[10]
+								newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
+								newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
+								lineparts = line.split()
+								lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
+								simlibline = " ".join(lineparts)
+								simliblines_oneday += [simlibline]
+								lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%(count+1); lineparts[6] = '%.2f'%newskysigr; lineparts[3] = 'Y'
+								simlibline = " ".join(lineparts)
+								simliblines_oneday += [simlibline]
+
+								count += 2
 		
-		if usednightcount > 0:
-			surveyarea_oneday = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*onedayfrac
-			nfields_oneday = surveyarea_oneday/(7*(np.pi/180.)**2.)
+			if usednightcount > 0:
+				surveyarea_oneday = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*onedayfrac
+				nfields_oneday = surveyarea_oneday/(7*(np.pi/180.)**2.)
+			else:
+				surveyarea_oneday = 0
+				nfields_oneday = 0
+
+			fout = open(simlibfile,'a')
+			for i in range(int(nfields_oneday)):
+				print("""LIBID:		  %i		# cadence from 2016W^@
+	RA:	   37.665487		DECL:	42.235969	  MWEBV:  0.059
+	NOBS:	%i		PIXSIZE:  0.500		REDSHIFT: 0.01925	  PEAKMJD: 57417.953
+	SUBSURVEY: PS1MD   FIELD: ONEDAY"""%(i+nfields,count),file=fout)			
+				for l in simliblines_oneday:
+					print(l,file=fout)
+				print("""#  MJD	   IDUM	 BAND  GAIN RDNOISE	 SKYSIG	   PSF1 PSF2 PSFRAT	   ZP	ZPERR
+	END_LIBID:		2
+	""",file=fout)
+			print(simlibfooter,file=fout)
+			fout.close()
+
 		else:
 			surveyarea_oneday = 0
 			nfields_oneday = 0
-			
-		fout = open(simlibfile,'a')
-		for i in range(int(nfields_oneday)):
-			print("""LIBID:		  %i		# cadence from 2016W^@
-RA:	   37.665487		DECL:	42.235969	  MWEBV:  0.059
-NOBS:	%i		PIXSIZE:  0.500		REDSHIFT: 0.01925	  PEAKMJD: 57417.953
-SUBSURVEY: PS1MD   FIELD: ONEDAY"""%(i+nfields,count),file=fout)			
-			for l in simliblines_oneday:
-				print(l,file=fout)
-			print("""#  MJD	   IDUM	 BAND  GAIN RDNOISE	 SKYSIG	   PSF1 PSF2 PSFRAT	   ZP	ZPERR
-END_LIBID:		2
-""",file=fout)
-		print(simlibfooter,file=fout)
-		fout.close()
-
-		#surveyarea = 2.*3600./20*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
 
 		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
 		return surveyarea+surveyarea_oneday, 0 #/(1-onedayfrac),surveyarea/(1-onedayfrac)
@@ -1679,7 +1682,7 @@ if __name__ == "__main__":
 			ztf_offset=options.ztfoffset,
 			onedayfrac=options.onedayfrac,exptime=options.exptime)
 
-		if exptime in delta_depths.keys(): exptime_depth = 55
+		if options.exptime in delta_depths.keys(): exptime_depth = 55
 		else: exptime_depth = exptime_depth
 		genversion = mks.mkinput(options.gcadence,options.rcadence,options.icadence,options.zcadence,
 								 options.inputfile,options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
