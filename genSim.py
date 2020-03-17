@@ -1232,7 +1232,6 @@ EXPOSURE_TIME_FILTER: r %.1f
 EXPOSURE_TIME_FILTER: i %.1f
 EXPOSURE_TIME_FILTER: z %.1f
 
-GENMAG_SMEAR_MODELNAME: G10
 # selection criteria for generation
 GENFILTERS:		  %s
 
