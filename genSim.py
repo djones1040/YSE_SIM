@@ -47,6 +47,16 @@ palomardict = {'01':0.452,'02':0.607,'03':0.452,'04':0.300,'05':0.161,'06':0.067
 #palomardict = {'01':0.0,'02':0.0,'03':0.0,'04':0.0,'05':0.0,'06':0.0,
 #			   '07':0.0,'08':0.0,'09':0.0,'10':0.0,'11':0.0,'12':0.0}
 
+g_27,r_27,i_27,z_27 = 21.52,21.63,21.55,20.99
+
+delta_depths = {15:(20.95-g_27,21.12-r_27,21.07-i_27,20.55-z_27),
+				20:(21.23-g_27,21.37-r_27,21.31-i_27,20.77-z_27),
+				25:(21.45-g_27,21.56-r_27,21.49-i_27,20.94-z_27),
+				27:(0.0,0.0,0.0,0.0),
+				30:(21.62-g_27,21.71-r_27,21.63-i_27,21.06-z_27),
+				35:(21.77-g_27,21.84-r_27,21.75-i_27,21.17-z_27)}
+
+
 
 def mkGoodWeatherList(simlibfile = 'PS1MD.simlib',
 					  obslistfile='weather/yse_goodweather.list'):
@@ -206,7 +216,15 @@ class mkSimlibs:
 		if not ronedaycadence: ronedaycadence = 999999
 		if not ionedaycadence: ionedaycadence = 999999
 		if not zonedaycadence: zonedaycadence = 999999
-		
+
+		if exptime in delta_depths.keys():
+			goff = delta_depths[exptime][0]
+			roff = delta_depths[exptime][1]
+			ioff = delta_depths[exptime][2]
+			zoff = delta_depths[exptime][3]
+		else:
+			goff,roff,ioff,zoff = 0,0,0,0
+			
 		# ZTF is 3 hours earlier
 		#ztf_offset = -0.125
 
@@ -248,8 +266,8 @@ class mkSimlibs:
 							lineid = line.split()[2]
 							skysig = line.split()[6]
 							linezpt = line.split()[10]
-							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
-							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
 							lineparts = line.split()
 							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
 							simlibline = " ".join(lineparts)
@@ -272,7 +290,7 @@ class mkSimlibs:
 						lineid = int(line.split()[2])
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
+						newskysig = self.skynoisefrommaglim(maglimg+goff,float(linezpt),areascale=3)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
@@ -287,7 +305,7 @@ class mkSimlibs:
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=2.1)
+						newskysig = self.skynoisefrommaglim(maglimr+roff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
@@ -302,7 +320,7 @@ class mkSimlibs:
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimi,float(linezpt),areascale=2.1)
+						newskysig = self.skynoisefrommaglim(maglimi+ioff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
@@ -318,8 +336,9 @@ class mkSimlibs:
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
+						newskysig = self.skynoisefrommaglim(z_27+zoff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
-						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count
+						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
 						simliblines += [simlibline]
 
@@ -341,8 +360,8 @@ class mkSimlibs:
 							lineid = line.split()[2]
 							skysig = line.split()[6]
 							linezpt = line.split()[10]
-							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
-							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
 							lineparts = line.split()
 							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
 							simlibline = " ".join(lineparts)
@@ -398,8 +417,8 @@ END_LIBID:		1
 							lineid = line.split()[2]
 							skysig = line.split()[6]
 							linezpt = line.split()[10]
-							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
-							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
 							lineparts = line.split()
 							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
 							simlibline = " ".join(lineparts)
@@ -422,7 +441,7 @@ END_LIBID:		1
 						lineid = int(line.split()[2])
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
+						newskysig = self.skynoisefrommaglim(maglimg+goff,float(linezpt),areascale=3)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
@@ -437,7 +456,7 @@ END_LIBID:		1
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=2.1)
+						newskysig = self.skynoisefrommaglim(maglimr+roff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
@@ -452,7 +471,7 @@ END_LIBID:		1
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimi,float(linezpt),areascale=2.1)
+						newskysig = self.skynoisefrommaglim(maglimi+ioff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
@@ -467,6 +486,7 @@ END_LIBID:		1
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
+						newskysig = self.skynoisefrommaglim(z_27+zoff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count
 						simlibline = " ".join(lineparts)
@@ -491,8 +511,8 @@ END_LIBID:		1
 							lineid = line.split()[2]
 							skysig = line.split()[6]
 							linezpt = line.split()[10]
-							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
-							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
 							lineparts = line.split()
 							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
 							simlibline = " ".join(lineparts)
@@ -527,7 +547,6 @@ END_LIBID:		2
 		#surveyarea = 2.*3600./20*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
 
 		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
-		import pdb; pdb.set_trace()
 		return surveyarea+surveyarea_oneday, 0 #/(1-onedayfrac),surveyarea/(1-onedayfrac)
 
 	def get_cadences(self,customdark,custombright,customonedark,customonebright,surveycadence,surveycadencebright):
@@ -598,56 +617,57 @@ END_LIBID:		2
 			if zcount != 0: self.zbrightcadence += [len(filtbrightepochs)/zcount*surveycadencebright[j]]
 			else: self.zbrightoffset[j] = 99999; self.zbrightcadence += [99999]
 
-		filtonedarkepochs = customonedark.split(',')
-		gcount,rcount,icount,zcount = 0,0,0,0
-		self.gonedarkoffset,self.ronedarkoffset,self.ionedarkoffset,self.zonedarkoffset = None,None,None,None
-		for i,fe in enumerate(filtonedarkepochs):
-			if 'g' in fe:
-				gcount += 1
-				if self.gonedarkoffset is None: self.gonedarkoffset = i
-			if 'r' in fe:
-				rcount += 1
-				if self.ronedarkoffset is None: self.ronedarkoffset = i
-			if 'i' in fe:
-				icount += 1
-				if self.ionedarkoffset is None: self.ionedarkoffset = i
-			if 'z' in fe:
-				zcount += 1
-				if self.zonedarkoffset is None: self.zonedarkoffset = i
-		if gcount != 0: self.gonedarkcadence = len(filtonedarkepochs)/gcount
-		else: self.gonedarkoffset = 99999; self.gonedarkcadence = 99999
-		if rcount != 0: self.ronedarkcadence = len(filtonedarkepochs)/rcount
-		else: self.ronedarkoffset = 99999; self.ronedarkcadence = 99999
-		if icount != 0: self.ionedarkcadence = len(filtonedarkepochs)/icount
-		else: self.ionedarkoffset = 99999; self.ionedarkcadence = 99999
-		if zcount != 0: self.zonedarkcadence = len(filtonedarkepochs)/zcount
-		else: self.zonedarkoffset = 99999; self.zonedarkcadence = 99999
+		if customonedark:
+			filtonedarkepochs = customonedark.split(',')
+			gcount,rcount,icount,zcount = 0,0,0,0
+			self.gonedarkoffset,self.ronedarkoffset,self.ionedarkoffset,self.zonedarkoffset = None,None,None,None
+			for i,fe in enumerate(filtonedarkepochs):
+				if 'g' in fe:
+					gcount += 1
+					if self.gonedarkoffset is None: self.gonedarkoffset = i
+				if 'r' in fe:
+					rcount += 1
+					if self.ronedarkoffset is None: self.ronedarkoffset = i
+				if 'i' in fe:
+					icount += 1
+					if self.ionedarkoffset is None: self.ionedarkoffset = i
+				if 'z' in fe:
+					zcount += 1
+					if self.zonedarkoffset is None: self.zonedarkoffset = i
+			if gcount != 0: self.gonedarkcadence = len(filtonedarkepochs)/gcount
+			else: self.gonedarkoffset = 99999; self.gonedarkcadence = 99999
+			if rcount != 0: self.ronedarkcadence = len(filtonedarkepochs)/rcount
+			else: self.ronedarkoffset = 99999; self.ronedarkcadence = 99999
+			if icount != 0: self.ionedarkcadence = len(filtonedarkepochs)/icount
+			else: self.ionedarkoffset = 99999; self.ionedarkcadence = 99999
+			if zcount != 0: self.zonedarkcadence = len(filtonedarkepochs)/zcount
+			else: self.zonedarkoffset = 99999; self.zonedarkcadence = 99999
 
-		filtonebrightepochs = customonebright.split(',')
-		gcount,rcount,icount,zcount = 0,0,0,0
-		self.gonebrightoffset,self.ronebrightoffset,self.ionebrightoffset,self.zonebrightoffset = None,None,None,None
-		for i,fe in enumerate(filtonebrightepochs):
-			if 'g' in fe:
-				gcount += 1
-				if self.gonebrightoffset is None: self.gonebrightoffset = i
-			if 'r' in fe:
-				rcount += 1
-				if self.ronebrightoffset is None: self.ronebrightoffset = i
-			if 'i' in fe:
-				icount += 1
-				if self.ionebrightoffset is None: self.ionebrightoffset = i
-			if 'z' in fe:
-				zcount += 1
-				if self.zonebrightoffset is None: self.zonebrightoffset = i
+			filtonebrightepochs = customonebright.split(',')
+			gcount,rcount,icount,zcount = 0,0,0,0
+			self.gonebrightoffset,self.ronebrightoffset,self.ionebrightoffset,self.zonebrightoffset = None,None,None,None
+			for i,fe in enumerate(filtonebrightepochs):
+				if 'g' in fe:
+					gcount += 1
+					if self.gonebrightoffset is None: self.gonebrightoffset = i
+				if 'r' in fe:
+					rcount += 1
+					if self.ronebrightoffset is None: self.ronebrightoffset = i
+				if 'i' in fe:
+					icount += 1
+					if self.ionebrightoffset is None: self.ionebrightoffset = i
+				if 'z' in fe:
+					zcount += 1
+					if self.zonebrightoffset is None: self.zonebrightoffset = i
 
-		if gcount != 0: self.gonebrightcadence = len(filtonebrightepochs)/gcount
-		else: self.gonebrightoffset = 99999; self.gonebrightcadence = 99999
-		if rcount != 0: self.ronebrightcadence = len(filtonebrightepochs)/rcount
-		else: self.ronebrightoffset = 99999; self.ronebrightcadence = 99999
-		if icount != 0: self.ionebrightcadence = len(filtonebrightepochs)/icount
-		else: self.ionebrightoffset = 99999; self.ionebrightcadence = 99999
-		if zcount != 0: self.zonebrightcadence = len(filtonebrightepochs)/zcount
-		else: self.zonebrightoffset = 99999; self.zonebrightcadence = 99999
+			if gcount != 0: self.gonebrightcadence = len(filtonebrightepochs)/gcount
+			else: self.gonebrightoffset = 99999; self.gonebrightcadence = 99999
+			if rcount != 0: self.ronebrightcadence = len(filtonebrightepochs)/rcount
+			else: self.ronebrightoffset = 99999; self.ronebrightcadence = 99999
+			if icount != 0: self.ionebrightcadence = len(filtonebrightepochs)/icount
+			else: self.ionebrightoffset = 99999; self.ionebrightcadence = 99999
+			if zcount != 0: self.zonebrightcadence = len(filtonebrightepochs)/zcount
+			else: self.zonebrightoffset = 99999; self.zonebrightcadence = 99999
 			
 	def mksimlib_moon(self,customdark,custombright,customonedark,customonebright,
 					  simlibfile,surveycadence=3,surveycadencebright=3,simperfect=False,ztfsim=True,
@@ -656,6 +676,15 @@ END_LIBID:		2
 		glines,rlines,ilines,zlines = getlines()
 		mjd_goodweather = np.loadtxt('weather/yse_goodweather.list',unpack=True)
 
+		if exptime in delta_depths.keys():
+			goff = delta_depths[exptime][0]
+			roff = delta_depths[exptime][1]
+			ioff = delta_depths[exptime][2]
+			zoff = delta_depths[exptime][3]
+		else:
+			goff,roff,ioff,zoff = 0,0,0,0
+
+		
 		self.get_cadences(customdark,custombright,customonedark,customonebright,surveycadence,surveycadencebright)
 
 		# ZTF is 3 hours earlier
@@ -734,12 +763,11 @@ END_LIBID:		2
 
 
 			nightcountztf += 1
-			#import pdb; pdb.set_trace()
 			
 			maglimg = np.interp(m,limmjdg,limmagg)
 			maglimr = np.interp(m,limmjdr,limmagr)
 			maglimi = np.interp(m,limmjdi,limmagi)
-
+			
 			# HACK
 			if ztf_offset < 0:
 				randval = random.uniform(0, 1)
@@ -752,8 +780,8 @@ END_LIBID:		2
 							lineid = line.split()[2]
 							skysig = line.split()[6]
 							linezpt = line.split()[10]
-							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
-							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
 							lineparts = line.split()
 							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
 							simlibline = " ".join(lineparts)
@@ -776,16 +804,16 @@ END_LIBID:		2
 						lineid = int(line.split()[2])
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3,moon_illum=illum)
+						newskysig = self.skynoisefrommaglim(maglimg+goff,float(linezpt),areascale=3,moon_illum=illum)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
 						simliblines += [simlibline]
-						if count > 400:
-							import pylab as plt
-							plt.ion()
-							plt.plot(self.illum,self.skybrightness,'o')
-							import pdb; pdb.set_trace()
+						#if count > 400:
+						#	import pylab as plt
+						#	plt.ion()
+						#	plt.plot(self.illum,self.skybrightness,'o')
+						#	import pdb; pdb.set_trace()
 						count += 1
 						ps1count += 1
 				if rcadence and (not (nightcounttmp - roffset) % rcadence and nightcounttmp - roffset >= 0) or simperfect:
@@ -795,7 +823,7 @@ END_LIBID:		2
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=2.1)
+						newskysig = self.skynoisefrommaglim(maglimr+roff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
@@ -810,7 +838,7 @@ END_LIBID:		2
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimi,float(linezpt),areascale=2.1)
+						newskysig = self.skynoisefrommaglim(maglimi+ioff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
@@ -826,8 +854,9 @@ END_LIBID:		2
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
+						newskysig = self.skynoisefrommaglim(z_27+zoff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
-						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count
+						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
 						simliblines += [simlibline]
 
@@ -853,8 +882,8 @@ END_LIBID:		2
 							lineid = line.split()[2]
 							skysig = line.split()[6]
 							linezpt = line.split()[10]
-							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
-							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
 							lineparts = line.split()
 							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
 							simlibline = " ".join(lineparts)
@@ -874,7 +903,7 @@ END_LIBID:		2
 		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)*len(mjd)/nights_on_telescope #*np.mean(surveycadence)
 		nfields = int(surveyarea/(7*(np.pi/180.)**2.))
 		print(surveyarea)
-		#import pdb; pdb.set_trace()
+
 		fout = open(simlibfile,'a')
 		for i in range(nfields):
 			print("""LIBID:		  %i		# cadence from 2016W^@
@@ -924,8 +953,8 @@ END_LIBID:		1
 							lineid = line.split()[2]
 							skysig = line.split()[6]
 							linezpt = line.split()[10]
-							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
-							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
 							lineparts = line.split()
 							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
 							simlibline = " ".join(lineparts)
@@ -948,7 +977,7 @@ END_LIBID:		1
 						lineid = int(line.split()[2])
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
+						newskysig = self.skynoisefrommaglim(maglimg+goff,float(linezpt),areascale=3)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
@@ -963,7 +992,7 @@ END_LIBID:		1
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=2.1)
+						newskysig = self.skynoisefrommaglim(maglimr+roff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
@@ -978,7 +1007,7 @@ END_LIBID:		1
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimi,float(linezpt),areascale=2.1)
+						newskysig = self.skynoisefrommaglim(maglimi+ioff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
@@ -993,8 +1022,9 @@ END_LIBID:		1
 						lineid = line.split()[2]
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
+						newskysig = self.skynoisefrommaglim(maglimz+zoff,float(linezpt),areascale=2.1)
 						lineparts = line.split()
-						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count
+						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
 						simliblines_oneday += [simlibline]
 
@@ -1017,8 +1047,8 @@ END_LIBID:		1
 							lineid = line.split()[2]
 							skysig = line.split()[6]
 							linezpt = line.split()[10]
-							newskysigg = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
-							newskysigr = self.skynoisefrommaglim(maglimr,float(linezpt),areascale=3)
+							newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
+							newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
 							lineparts = line.split()
 							lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
 							simlibline = " ".join(lineparts)
@@ -1053,7 +1083,6 @@ END_LIBID:		2
 		#surveyarea = 2.*3600./20*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
 
 		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
-		#import pdb; pdb.set_trace()
 		return surveyarea+surveyarea_oneday, 0 #/(1-onedayfrac),surveyarea/(1-onedayfrac)
 	
 		
@@ -1650,9 +1679,11 @@ if __name__ == "__main__":
 			ztf_offset=options.ztfoffset,
 			onedayfrac=options.onedayfrac,exptime=options.exptime)
 
+		if exptime in delta_depths.keys(): exptime_depth = 55
+		else: exptime_depth = exptime_depth
 		genversion = mks.mkinput(options.gcadence,options.rcadence,options.icadence,options.zcadence,
 								 options.inputfile,options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
-								 surveyarea,surveyarea_oneday,simperfect=options.perfect,batchtmpl=options.batchtmpl,exptime=options.exptime_depth)
+								 surveyarea,surveyarea_oneday,simperfect=options.perfect,batchtmpl=options.batchtmpl,exptime=exptime_depth)
 	
 	if options.sim:
 		if not options.justpkl:
