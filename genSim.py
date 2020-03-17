@@ -169,7 +169,7 @@ class mkSimlibs:
 		parser.add_option(
 			'-i','--inputfile', default='snanainputs/yse.input',type="string",
 			help='name of simlib file (default=%default)')
-		parser.add_option('--batchtmpl',default='$SBATCH_TEMPLATES/SBATCH_Midway2_short.TEMPLATE',
+		parser.add_option('--batchtmpl',default='$SBATCH_TEMPLATES/SBATCH_Midway2.TEMPLATE',
 						  type="string",help='cluster batch template')
 		parser.add_option(
 			'-s','--sim', default=False,action="store_true",
