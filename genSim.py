@@ -148,6 +148,9 @@ class mkSimlibs:
 			'--exptime', default=15,type="float",
 			help='exposure time in seconds (default=%default)')
 		parser.add_option(
+			'--exptime_depth', default=15,type="float",
+			help='exposure time in seconds (default=%default)')
+		parser.add_option(
 			'--onedayfrac', default=0.0,type="float",
 			help='fraction of survey with a one-day cadence, w/ offsets also divided by 3 for this subset (default=%default)')
 		parser.add_option(
@@ -156,11 +159,14 @@ class mkSimlibs:
 		parser.add_option(
 			'-i','--inputfile', default='snanainputs/yse.input',type="string",
 			help='name of simlib file (default=%default)')
-		parser.add_option('--batchtmpl',default='/home/djones1741/djones/SBATCH_sandyb.TEMPLATE',
+		parser.add_option('--batchtmpl',default='$SBATCH_TEMPLATES/SBATCH_Midway2_short.TEMPLATE',
 						  type="string",help='cluster batch template')
 		parser.add_option(
 			'-s','--sim', default=False,action="store_true",
 			help='run SNANA simulation, if set (default=%default)')
+		parser.add_option(
+			'--justpkl', default=False,action="store_true",
+			help='do not run SNANA simulation, just make the pkl files, if set (default=%default)')
 		parser.add_option(
 			'--fit', default=False,action="store_true",
 			help='run SNANA fitting, if set (default=%default)')
@@ -215,7 +221,7 @@ class mkSimlibs:
 			mjd = np.arange(58240,59517,1)
 			#mjd = np.arange(58240,58605,1)
 		else:
-			mjd = np.arange(58240,58440,1)
+			mjd = np.arange(58240,58380,0.33)
 			#mjd = np.arange(58240,59000,1)
 
 		# mag lims with moon phase from Sofie
@@ -521,6 +527,7 @@ END_LIBID:		2
 		#surveyarea = 2.*3600./20*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
 
 		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
+		import pdb; pdb.set_trace()
 		return surveyarea+surveyarea_oneday, 0 #/(1-onedayfrac),surveyarea/(1-onedayfrac)
 
 	def get_cadences(self,customdark,custombright,customonedark,customonebright,surveycadence,surveycadencebright):
@@ -650,7 +657,7 @@ END_LIBID:		2
 		mjd_goodweather = np.loadtxt('weather/yse_goodweather.list',unpack=True)
 
 		self.get_cadences(customdark,custombright,customonedark,customonebright,surveycadence,surveycadencebright)
-		
+
 		# ZTF is 3 hours earlier
 		#ztf_offset = -0.125
 
@@ -683,7 +690,7 @@ END_LIBID:		2
 		
 		# nominal survey
 		count = 0; nightcountztf = -1; usednightcount = 0; ps1count = 0
-		nightcount = [-1]*len(surveycadence)
+		nightcount = -1 #[-1]*len(surveycadence)
 		nightcountbright = [-1]*len(surveycadencebright)
 		simliblines = []
 		times = Time(mjd,format='mjd')
@@ -699,6 +706,7 @@ END_LIBID:		2
 			
 			#t = Time(m,format='mjd')
 			illum = moon_illumination(t)
+			#print('hack!  no bright survey')
 			if illum > 0.75:
 				gcadence,rcadence,icadence,zcadence = \
 					self.gbrightcadence[cadencecountbright % cadencelenbright],self.rbrightcadence[cadencecountbright % cadencelenbright],\
@@ -706,8 +714,10 @@ END_LIBID:		2
 				goffset,roffset,ioffset,zoffset = \
 					self.gbrightoffset[cadencecountbright % cadencelenbright],self.rbrightoffset[cadencecountbright % cadencelenbright],\
 					self.ibrightoffset[cadencecountbright % cadencelenbright],self.zbrightoffset[cadencecountbright % cadencelenbright]
-				nightcountbright[cadencecountbright % cadencelenbright] += 1
-				nightcounttmp = nightcountbright[cadencecountbright % cadencelenbright]
+				#nightcountbright[cadencecountbright % cadencelenbright] += 1
+				#nightcounttmp = nightcountbright[cadencecountbright % cadencelenbright]
+				nightcount += 1
+				nightcounttmp = nightcount
 			else:
 				gcadence,rcadence,icadence,zcadence = \
 					self.gdarkcadence[cadencecount % cadencelen],self.rdarkcadence[cadencecount % cadencelen],\
@@ -715,8 +725,11 @@ END_LIBID:		2
 				goffset,roffset,ioffset,zoffset = \
 					self.gdarkoffset[cadencecount % cadencelen],self.rdarkoffset[cadencecount % cadencelen],\
 					self.idarkoffset[cadencecount % cadencelen],self.zdarkoffset[cadencecount % cadencelen]
-				nightcount[cadencecount % cadencelen] += 1
-				nightcounttmp = nightcount[cadencecount % cadencelen]
+				#nightcount[cadencecount % cadencelen] += 1
+				#nightcounttmp = nightcount[cadencecount % cadencelen]
+				nightcount += 1
+				nightcounttmp = nightcount
+
 			#print(self.gdarkcadence[cadencecount % cadencelen],cadencecount,gcadence,rcadence)
 
 
@@ -858,9 +871,10 @@ END_LIBID:		2
 		fout.close()
 
 		# ps1count/usednightcount is # of filters
-		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)*len(mjd)/nights_on_telescope #np.mean(surveycadence)
+		surveyarea = 1.6*3600./(exptime+12)*0.76*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.*(1-onedayfrac)*len(mjd)/nights_on_telescope #*np.mean(surveycadence)
 		nfields = int(surveyarea/(7*(np.pi/180.)**2.))
-
+		print(surveyarea)
+		#import pdb; pdb.set_trace()
 		fout = open(simlibfile,'a')
 		for i in range(nfields):
 			print("""LIBID:		  %i		# cadence from 2016W^@
@@ -1039,6 +1053,7 @@ END_LIBID:		2
 		#surveyarea = 2.*3600./20*7/(ps1count/float(usednightcount))*(np.pi/180.)**2.
 
 		# 12s overhead, 16% of a telescope, 0.76 detector area, 7 sq deg
+		#import pdb; pdb.set_trace()
 		return surveyarea+surveyarea_oneday, 0 #/(1-onedayfrac),surveyarea/(1-onedayfrac)
 	
 		
@@ -1088,7 +1103,7 @@ END_LIBID:		2
 			genversion,genversion,genversion,genversion,
 			genversion,genversion,genversion,genversion,
 			genversion,genversion,genversion,genversion,
-			genversion)
+			genversion,genversion)
 		
 		print(mastertmpl%(
 			batchtmpl,
@@ -1191,7 +1206,7 @@ GENFILTERS:		  %s
 
 GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
-GENRANGE_PEAKMJD:  58240  59617
+GENRANGE_PEAKMJD:  58240  59517
 GENRANGE_RA: -999 +999
 GENRANGE_DECL: -999 +999
 SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
@@ -1273,7 +1288,7 @@ GENFILTERS:		  %s
 
 GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
-GENRANGE_PEAKMJD:  58240  59617
+GENRANGE_PEAKMJD:  58240  59517
 GENRANGE_RA: -999 +999
 GENRANGE_DECL: -999 +999
 SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
@@ -1355,7 +1370,7 @@ GENFILTERS:		  %s
 
 GENSIGMA_SEARCH_PEAKMJD:  1.0		  # sigma-smearing for	SEARCH_PEAKMJD (days)
 
-GENRANGE_PEAKMJD:  58240  59617
+GENRANGE_PEAKMJD:  58240  59517
 GENRANGE_RA: -999 +999
 GENRANGE_DECL: -999 +999
 SOLID_ANGLE: %.3f # 0.148 # 1 field, 7 sq degreees *7
@@ -1407,7 +1422,7 @@ H0:			  70.0
 
 SIMGEN_DUMP:  8	 CID  Z	 PEAKMJD SNRMAX MAGT0_r MAGT0_g MJD_TRIGGER NON1A_INDEX
 
-PATH_NON1ASED: /project/rkessler/SURVEYS/YSE/USERS/djones/YSE_SIM/LFs/NON1A
+PATH_NON1ASED: /project2/rkessler/SURVEYS/YSE/USERS/djones/YSE_SIM/LFs/NON1A
 INPUT_FILE_INCLUDE: SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
 """
 
@@ -1467,15 +1482,15 @@ GENVERSION: %s
 GENOPT(1A): DNDZ POWERLAW  2.6E-5  2.2
 GENOPT(NON1A): DNDZ POWERLAW 5E-5	4.5
 GENOPT(NON1A): DNDZ_PEC1A POWERLAW	2.6E-5	2.2
-GENOPT(NON1A): PATH_NON1ASED /project/rkessler/SURVEYS/YSE/USERS/djones/YSE_SIM/LFs/NON1A
+GENOPT(NON1A): PATH_NON1ASED /project2/rkessler/SURVEYS/YSE/USERS/djones/YSE_SIM/LFs/NON1A
 # new rates, allowing SN Iax to be 31%%
 
 GENVERSION: %s_YOUNG
 GENOPT(1A): DNDZ POWERLAW  2.6E-5  2.2
 GENOPT(NON1A): DNDZ POWERLAW 5E-5	4.5
-GENOPT(NON1A): DNDZ_PEC1A POWERLAW	2.6E-5	2.2
-GENOPT(NON1A): PATH_NON1ASED /project/rkessler/SURVEYS/YSE/USERS/djones/YSE_SIM/LFs/NON1A
-GENOPT(NON1A): INPUT_FILE_INCLUDE LFs/SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
+GENOPT(NON1A): DNDZ_PEC1A POWERLAW	6.3E-5	2.2
+GENOPT(NON1A): PATH_NON1ASED /project2/rkessler/SURVEYS/YSE/USERS/djones/YSE_SIM/LFs/NON1A
+GENOPT(NON1A): INPUT_FILE_INCLUDE LFs/SIMGEN_INCLUDE_NON1A_YOUNGSN_Iaadj.INPUT
 %s
 %s
 
@@ -1483,7 +1498,7 @@ GENOPT(NON1A): INPUT_FILE_INCLUDE LFs/SIMGEN_INCLUDE_NON1A_YOUNGSN.INPUT
 
 ENDLIST_GENVERSION:
 
-NGEN_UNIT:	0.014  SEASONS
+NGEN_UNIT:	0.286  SEASONS
 # 0.014 SEASONS
 # 0.286 seasons (1 year)/20 jobs
 
@@ -1499,25 +1514,6 @@ FORMAT_MASK: 48			  # 2=TERSE	   16=RanCID  32=FITS-FORMAT
 RESET_CIDOFF: 2
 PATH_SNDATA_SIM:  $SCRATCH_SIMDIR
 
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
-RANSEED: 12349
 RANSEED: 12349
 
 """
@@ -1602,6 +1598,16 @@ GENOPT: INPUT_FILE_INCLUDE $LSST_USERS/djones/PLASTICC/SIMGEN/SIMGEN_INCLUDE_SNI
 GENOPT: GENTYPE 62	 SIMLIB_NREPEAT 4
 GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 
+# - - - - - -  GW counterpart models - - - - - - -
+
+# Kilonova models from Kasen 2017
+#GENVERSION:  %s_PLASTICC_MODEL64_KN
+#GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_KN-K17.INPUT
+#GENOPT: GENTYPE 64
+#GENOPT: NGENTOT_LC XXXNGEN_IDEAL
+#GENOPT: SEARCHEFF_SPEC_SCALE 1.0      DDF_SPEC_SCALE
+#GENOPT: SEARCHEFF_SPEC_SCALE 1.0      WFD_SPEC_SCALE
+
 # - - - - - - - -
 # Type Ia SN
 GENVERSION: %s_PLASTICC_MODEL90_SNIa-SALT2
@@ -1646,18 +1652,19 @@ if __name__ == "__main__":
 
 		genversion = mks.mkinput(options.gcadence,options.rcadence,options.icadence,options.zcadence,
 								 options.inputfile,options.simlibfile.replace('.simlib','_%s.simlib'%options.inputfile.split('/')[-1].split('.')[0]),
-								 surveyarea,surveyarea_oneday,simperfect=options.perfect,batchtmpl=options.batchtmpl,exptime=options.exptime)
+								 surveyarea,surveyarea_oneday,simperfect=options.perfect,batchtmpl=options.batchtmpl,exptime=options.exptime_depth)
 	
 	if options.sim:
-		os.system('rm -r SIMLOGS_%s'%genversion)
-		os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
+		if not options.justpkl:
+			os.system('rm -r SIMLOGS_%s'%genversion)
+			os.system('sim_SNmix.pl %s'%options.inputfile.replace('.','_MASTER.'))
 
 		# check for job completion
 		print('waiting for job to finish...')
 		job_complete=False
 		while not job_complete:
 			time.sleep(15)
-			simtext = os.popen('squeue --user=djones1741 --format="%.30j"').read()
+			simtext = os.popen('squeue --user=djones1741 --format="%.50j"').read()
 
 			job_complete = True
 			for line in simtext.split('\n'):
@@ -1672,9 +1679,10 @@ if __name__ == "__main__":
 		fulldatadict = {}
 		for versionsuffix in ['PLASTICC_MODEL67_SNIa-91bg','PLASTICC_MODEL52_SNIax','PLASTICC_MODEL95_SLSN-I',
 							  'PLASTICC_MODEL99_ILOT','PLASTICC_MODEL99_CART','PLASTICC_MODEL42_SNIIn',
-							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL62_SNIbc-Templates',
+							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL62_SNIbc-MOSFIT',
 							  'PLASTICC_MODEL42_SNII-NMF','PLASTICC_MODEL42_SNII-Templates',
-							  'PLASTICC_MODEL62_SNIbc-Templates','PLASTICC_MODEL90_SNIa-SALT2']:
+							  'PLASTICC_MODEL64_KN',
+							  'PLASTICC_MODEL90_SNIa-SALT2']:
 			try:
 				datadict = serialize.main('%s_%s'%(genversion,versionsuffix),verbose=True,save=False,
 										  filters='grizXY',dirpath='$SCRATCH_SIMDIR')
