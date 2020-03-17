@@ -1051,8 +1051,7 @@ END_LIBID:		1
 								newskysigg = self.skynoisefrommaglim(maglimg-0.4,float(linezpt),areascale=3)
 								newskysigr = self.skynoisefrommaglim(maglimr-0.6,float(linezpt),areascale=3)
 								lineparts = line.split()
-								lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'
-								simlibline = " ".join(lineparts)
+								lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysigg; lineparts[3] = 'X'								simlibline = " ".join(lineparts)
 								simliblines_oneday += [simlibline]
 								lineparts[1] = '%.2f'%(m+ztf_offset); lineparts[2] = '%i'%(count+1); lineparts[6] = '%.2f'%newskysigr; lineparts[3] = 'Y'
 								simlibline = " ".join(lineparts)
@@ -1093,6 +1092,8 @@ END_LIBID:		1
 				surveyarea,surveyarea_oneday,simperfect=False,batchtmpl=None,exptime=15):
 
 		expadj = exptime/15.
+
+		expadj_g,expadj_r,expadj_i,expadj_z = 0.9,1.1,2.0,0.2
 		
 		filtstr = ''
 		for filt,cadence in zip('grizXY',[gcadence,rcadence,icadence,zcadence,3,3]):
