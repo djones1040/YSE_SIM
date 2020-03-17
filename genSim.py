@@ -1539,7 +1539,6 @@ NGEN_UNIT:	0.286  SEASONS
 SIMGEN_INFILE_NONIa: %s
 
 # define required global items to ensure uniformity among all jobs
-H0: 70
 GENOPT_GLOBAL: GENRANGE_REDSHIFT  0.002  %.1f
 GENPREFIX:	 %s			 # prefix of all data filenames
 FORMAT_MASK: 48			  # 2=TERSE	   16=RanCID  32=FITS-FORMAT
