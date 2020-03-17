@@ -67,7 +67,8 @@ def mkGoodWeatherList(simlibfile = 'PS1MD.simlib',
 	
 class mkSimlibs:
 	def __init__(self):
-		pass
+		self.illum = []
+		self.skybrightness = []
 
 	def add_options(self, parser=None, usage=None, config=None):
 		import optparse
@@ -172,10 +173,13 @@ class mkSimlibs:
 
 		return(parser)
 
-	def skynoisefrommaglim(self,maglim,zpt,areascale=3):
+	def skynoisefrommaglim(self,maglim,zpt,areascale=3,moon_illum=0):
 
 		skysig = 1/np.sqrt(np.pi)/areascale*np.sqrt(0.25*((0.4*10**(0.4*(zpt-maglim)) + 5)**2. - 25))
-
+		#if moon_illum != 0: print(moon_illum,-2.5*np.log10(skysig)+21.90)
+		#if moon_illum > 0.8: import pdb; pdb.set_trace()
+		self.illum += [moon_illum]
+		self.skybrightness += [-2.5*np.log10(skysig)+21.90]
 		return skysig
 	
 	def mksimlib(self,gcadence,rcadence,icadence,zcadence,
@@ -759,12 +763,16 @@ END_LIBID:		2
 						lineid = int(line.split()[2])
 						skysig = line.split()[6]
 						linezpt = line.split()[10]
-						newskysig = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3)
+						newskysig = self.skynoisefrommaglim(maglimg,float(linezpt),areascale=3,moon_illum=illum)
 						lineparts = line.split()
 						lineparts[1] = '%.2f'%m; lineparts[2] = '%i'%count; lineparts[6] = '%.2f'%newskysig
 						simlibline = " ".join(lineparts)
 						simliblines += [simlibline]
-						
+						if count > 400:
+							import pylab as plt
+							plt.ion()
+							plt.plot(self.illum,self.skybrightness,'o')
+							import pdb; pdb.set_trace()
 						count += 1
 						ps1count += 1
 				if rcadence and (not (nightcounttmp - roffset) % rcadence and nightcounttmp - roffset >= 0) or simperfect:
