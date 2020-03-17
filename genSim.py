@@ -702,8 +702,8 @@ END_LIBID:		2
 			
 			#t = Time(m,format='mjd')
 			illum = moon_illumination(t)
-			print('hack!  no bright survey')
-			if illum > 0.99999:
+			#print('hack!  no bright survey')
+			if illum > 0.75:
 				gcadence,rcadence,icadence,zcadence = \
 					self.gbrightcadence[cadencecountbright % cadencelenbright],self.rbrightcadence[cadencecountbright % cadencelenbright],\
 					self.ibrightcadence[cadencecountbright % cadencelenbright],self.zbrightcadence[cadencecountbright % cadencelenbright]
@@ -1593,12 +1593,12 @@ GENOPT: SEARCHEFF_SPEC_SCALE 1.0
 # - - - - - -  GW counterpart models - - - - - - -
 
 # Kilonova models from Kasen 2017
-GENVERSION:  %s_PLASTICC_MODEL64_KN
-GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_KN-K17.INPUT
-GENOPT: GENTYPE 64
-GENOPT: NGENTOT_LC XXXNGEN_IDEAL
-GENOPT: SEARCHEFF_SPEC_SCALE 1.0      DDF_SPEC_SCALE
-GENOPT: SEARCHEFF_SPEC_SCALE 1.0      WFD_SPEC_SCALE
+#GENVERSION:  %s_PLASTICC_MODEL64_KN
+#GENOPT: INPUT_FILE_INCLUDE $PLASTICC_ROOT/SIMGEN/SIMGEN_INCLUDE_KN-K17.INPUT
+#GENOPT: GENTYPE 64
+#GENOPT: NGENTOT_LC XXXNGEN_IDEAL
+#GENOPT: SEARCHEFF_SPEC_SCALE 1.0      DDF_SPEC_SCALE
+#GENOPT: SEARCHEFF_SPEC_SCALE 1.0      WFD_SPEC_SCALE
 
 # - - - - - - - -
 # Type Ia SN
