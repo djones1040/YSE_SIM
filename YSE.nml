@@ -2,21 +2,25 @@ OUTDIR: YSE
 
 BATCH_INFO:  sbatch  /home/djones1741/djones/SBATCH_sandyb.TEMPLATE 120
 
-APPEND_FITRES: FITRES RA DECL TGAPMAX
+APPEND_FITRES: FITRES TGAPMAX
 
 SALT2mu_INFILE: SALT2mu.default
-VERSION: yse_ztf_gr_gi_gz
-VERSION: yse_ztf_1day_gr_gi_gz
-VERSION: yse_ztf_30s_gr_gi_gz
-VERSION: yse_ztf_gi_rz
-VERSION: yse_ztf_30s_gi_rz
-VERSION: yse_ztf
+VERSION: yse_griz_riz_27s_PLASTICC_MODEL90_SNIa-SALT2
+VERSION: yse_griz_riz_15s_PLASTICC_MODEL90_SNIa-SALT2
+VERSION: yse_griz_riz_20s_PLASTICC_MODEL90_SNIa-SALT2
+VERSION: yse_griz_riz_25s_PLASTICC_MODEL90_SNIa-SALT2
+VERSION: yse_griz_riz_30s_PLASTICC_MODEL90_SNIa-SALT2
+VERSION: yse_griz_riz_35s_PLASTICC_MODEL90_SNIa-SALT2
+VERSION: yse_gri_riz_27s_PLASTICC_MODEL90_SNIa-SALT2
+VERSION: yse_griz_27s_PLASTICC_MODEL90_SNIa-SALT2
+VERSION: yse_gr_27s_PLASTICC_MODEL90_SNIa-SALT2
+VERSION: yse_ri_rz_27s_PLASTICC_MODEL90_SNIa-SALT2
 
      #HFILE_OUT          = 'ps1_final.hbook'
 
    &SNLCINP
-     VERSION_PHOTOMETRY = 'yse'
-     
+     VERSION_PHOTOMETRY = 'yse_gr_gi_gz_10per_PLASTICC_MODEL90_SNIa-SALT2'
+
      ROOTFILE_OUT       = 'ps1_final.root'
      KCOR_FILE          = '$PS1_ROOT/kcor/ZTF/kcor_PS1_ZTF_none.fits'
 
@@ -33,14 +37,14 @@ VERSION: yse_ztf
      W0_REF   = -1.00
  
      CUTWIN_CID  = 0, 9920091
-     CUTWIN_REDSHIFT = 0.02, 1.0
+     CUTWIN_REDSHIFT = 0.01, 1.0
      SNCCID_IGNORE = ''
      
      ABORT_ON_NOEPOCHS = F
 
      RV_MWCOLORLAW = 3.1
      OPT_MWCOLORLAW = 99 
-     OPT_MWEBV = 1 
+     OPT_MWEBV = 3
      MWEBV_SCALE = 1.0
      MWEBV_SHIFT = 0.0 
      LDMP_SNFAIL = T
@@ -53,21 +57,20 @@ VERSION: yse_ztf
     LFIXPAR_ALL     = F
 
     FITMODEL_NAME  = 'SALT2.JLA-B14_LAMOPEN'
-   
-    OPT_COVAR = 1
-    OPT_XTMW_ERR = 1
-    FUDGEALL_ITER1_MAXFRAC = 0.02
-    PRIOR_MJDSIG        = 25.0
-    PRIOR_LUMIPAR_RANGE = -5.0, 5.0
-    PRIOR_LUMIPAR_SIGMA = 0.1
 
-    TREST_REJECT  = -15.0, 45.0
-    NGRID_PDF     = 0 
-   
+     FUDGEALL_ITER1_MAXFRAC = 0.01
+     PRIOR_MJDSIG        = 10
+     PRIOR_SHAPE_RANGE   = -4.0, 4.0
+
+     FITWIN_SHAPE     = -3.00, +3.00
+     FITWIN_COLOR     = -0.30, +0.30
+     FITWIN_PROB      =  0.01,  1.01
+     FITWIN_TREST     = -15.0, 45.0
+     DELCHI2_REJECT   = 10
+      
     FILTLIST_FIT = 'griz'
     FILTLIST_DMPFUN = ''
 
-    FITWIN_PROB      = 0.0, 1.01
     RESTLAMBDA_FITRANGE = 2650, 7800
 
   &END
